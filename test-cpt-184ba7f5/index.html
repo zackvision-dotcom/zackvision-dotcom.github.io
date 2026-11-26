@@ -76,6 +76,7 @@ input:focus,select:focus{outline:2px solid var(--tapis);border-color:transparent
 .aide{font-size:.82rem;color:var(--doux);margin-top:6px}
 .apercu{min-height:52px;margin-top:10px;padding:12px 14px;border-radius:14px;background:#fff;border:1px solid var(--ligne);font-size:.92rem;display:flex;align-items:center}
 .choix.capot button{border-style:dashed}
+.actions-fixes{position:sticky;bottom:calc(-18px - env(safe-area-inset-bottom));margin:16px -16px 0;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--creme);border-top:1px solid var(--ligne)}
 .regle{font-size:.88rem;line-height:1.55}
 .regle li{margin:4px 0 4px 18px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--vert);color:#fff;padding:11px 16px;border-radius:12px;font-weight:700;z-index:60;max-width:90%;text-align:center}
@@ -93,6 +94,7 @@ input:focus,select:focus{outline:2px solid var(--tapis);border-color:transparent
 var H = function (n) { return window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers[n]; };
 var natif = function (n, m) { var h = H(n); return h ? Promise.resolve(h.postMessage(m)).catch(function () { return false; }) : Promise.resolve(null); };
 var PID = "com.zvisionclub.compteurpoints.noads";
+var BOUTIQUE = !!H("store") || /[?&]test=1/.test(location.search);
 
 // ---------- Sauvegarde ----------
 var CLE = "compteur_v1";
@@ -119,15 +121,24 @@ function calculBelote(m) {
     var bel = m.belote != null ? m.belote : -1;
     var totPren = pp + (bel === preneur ? 20 : 0), totDef = pd + (bel === def ? 20 : 0);
     if (totPren > totDef) { s[preneur] = pp; s[def] = pd; }
+    else if (totPren === totDef) { s[preneur] = 0; s[def] = pd; } // litige : les points du preneur restent en suspens
     else { s[preneur] = 0; s[def] = 162; } // dedans : la défense marque tout
   }
   if (m.belote != null && m.belote >= 0) s[m.belote] += 20;
   return s;
 }
+function etatBelote(m) {
+  if (m.capot) return "capot";
+  var pp = Math.max(0, Math.min(162, m.ptsPreneur)), pd = 162 - pp, bel = m.belote != null ? m.belote : -1;
+  var a = pp + (bel === m.preneur ? 20 : 0), d = pd + (bel === 1 - m.preneur ? 20 : 0);
+  return a > d ? "fait" : (a === d ? "litige" : "dedans");
+}
 // Tarot (barème FFT) : points à faire selon les bouts, (25 + écart + petit au bout) × contrat, poignée et chelem en plus.
 var BESOIN = [56, 51, 41, 36], MULT = { petite: 1, garde: 2, sans: 4, contre: 6 }, POIGNEE = { 0: 0, 1: 20, 2: 30, 3: 40 };
 function calculTarot(m, n) {
-  var besoin = BESOIN[m.bouts], ecart = m.points - besoin, gagne = ecart >= 0, mult = MULT[m.contrat], signe = gagne ? 1 : -1;
+  var besoin = BESOIN[m.bouts], ecart = m.points - besoin, gagne = ecart >= 0;
+  ecart = Math.ceil(Math.abs(ecart)) * (gagne ? 1 : -1); // demi-point arrondi au point supérieur : scores entiers
+  var mult = MULT[m.contrat], signe = gagne ? 1 : -1;
   var petit = m.petit === "att" ? 10 : (m.petit === "def" ? -10 : 0);
   var chelem = { annonce: 400, nonannonce: 200, rate: -200 }[m.chelem] || 0;
   // valeur pour UN défenseur, vue du preneur : (25 + écart) × contrat, petit au bout × contrat, poignée au camp gagnant, chelem
@@ -289,7 +300,7 @@ function mancheBelote(p) {
       '<p class="aide">L’autre équipe a automatiquement 162 − ce nombre. Si le preneur fait moins que la défense, il est « dedans » : la défense marque 162.</p>' +
       '<label>Belote-Rebelote</label><div class="choix"><button data-bel="-1"' + (m.belote == null ? ' class="on"' : "") + ">Personne</button>" + p.noms.map(function (n, i) { return '<button data-bel="' + i + '"' + (m.belote === i ? ' class="on"' : "") + ">" + esc(n) + "</button>"; }).join("") + "</div>" +
       '<label>Capot (tous les plis, 252 pts)</label><div class="choix"><button data-cap="0"' + (!m.capot ? ' class="on"' : "") + ">Non</button>" + p.noms.map(function (n, i) { return '<button data-cap="' + (i + 1) + '"' + (m.capot === i + 1 ? ' class="on"' : "") + ">" + esc(n) + "</button>"; }).join("") + "</div>" +
-      '<div class="deux" style="margin-top:14px"><button class="btn" data-annul>Annuler</button><button class="btn vert" data-ok>Valider</button></div>';
+      '<div class="deux actions-fixes"><button class="btn" data-annul>Annuler</button><button class="btn vert" data-ok>Valider</button></div>';
     lier(); majApercu();
   }
   function calculer() {
@@ -298,7 +309,8 @@ function mancheBelote(p) {
   }
   function majApercu() {
     var ap = calculer(), z = v.querySelector("[data-apercu]"), ok = v.querySelector("[data-ok]");
-    z.innerHTML = ap ? "<b>Cette manche :</b> " + p.noms.map(function (n, i) { return esc(n) + " +" + ap[i]; }).join(" · ") : '<span style="color:var(--doux)">Tape les points du preneur pour voir le résultat</span>';
+    var et = ap && !m.capot ? etatBelote({ preneur: m.preneur, ptsPreneur: +m.ptsPreneur, belote: m.belote }) : "";
+    z.innerHTML = ap ? "<b>Cette manche" + (et === "dedans" ? " (dedans)" : et === "litige" ? " (litige : " + Math.max(0, Math.min(162, +m.ptsPreneur)) + " pts en suspens)" : "") + " :</b> " + p.noms.map(function (n, i) { return esc(n) + " +" + ap[i]; }).join(" · ") + (p.litige ? " · litige en attente : " + p.litige : "") : '<span style="color:var(--doux)">Tape les points du preneur pour voir le résultat</span>';
     ok.style.opacity = ap ? "1" : ".45";
   }
   function lier() {
@@ -314,7 +326,12 @@ function mancheBelote(p) {
     f.querySelector("[data-annul]").onclick = function () { v.remove(); };
     f.querySelector("[data-ok]").onclick = function () {
       var s = calculer(); if (!s) return;
-      v.remove(); ajouterManche(p, { s: s, info: p.noms[m.preneur].slice(0, 6) + (m.capot ? " capot" : (s[m.preneur] === 0 ? " dedans" : "")) });
+      var e = m.capot ? "capot" : etatBelote({ preneur: m.preneur, ptsPreneur: +m.ptsPreneur, belote: m.belote, capot: 0 });
+      var info = p.noms[m.preneur].slice(0, 6) + (e === "fait" ? "" : " " + e);
+      // litige en attente : il revient à l'équipe qui gagne la donne suivante
+      if (p.litige && e !== "litige") { var g = s[0] === s[1] ? -1 : (s[0] > s[1] ? 0 : 1); if (g >= 0) { s[g] += p.litige; info += " +" + p.litige + " litige"; p.litige = 0; } }
+      if (e === "litige") p.litige = (p.litige || 0) + Math.max(0, Math.min(162, +m.ptsPreneur));
+      v.remove(); ajouterManche(p, { s: s, info: info });
     };
   }
   var v = feuille("", function () {}); rendu();
@@ -323,11 +340,15 @@ function mancheTarot(p) {
   var n = p.noms.length, m = { preneur: 0, partenaire: n === 5 ? 1 : null, contrat: "garde", bouts: 1, points: "", petit: 0, poignee: 0, chelem: 0 };
   var v = feuille("", function () {});
   function choix(cle, opts) { return '<div class="choix">' + opts.map(function (o) { return '<button data-c="' + cle + '" data-v="' + o[0] + '"' + (String(m[cle]) === String(o[0]) ? ' class="on"' : "") + ">" + o[1] + "</button>"; }).join("") + "</div>"; }
+  function calcul() { return m.points === "" ? null : calculTarot({ preneur: m.preneur, partenaire: m.partenaire, contrat: m.contrat, bouts: m.bouts, points: +m.points, petit: m.petit, poignee: m.poignee, chelem: m.chelem }, n); }
+  function majApercu() {
+    var ap = calcul(), z = v.querySelector("[data-apercu]"), ok = v.querySelector("[data-ok]");
+    z.innerHTML = ap ? "<b>" + (+m.points >= BESOIN[m.bouts] ? "✅ Fait" : "❌ Chuté") + "</b>&nbsp;· " + p.noms.map(function (x, i) { return esc(x) + " " + (ap[i] > 0 ? "+" : "") + ap[i]; }).join(" · ") : '<span style="color:var(--doux)">Tape les points du preneur pour voir le résultat</span>';
+    ok.style.opacity = ap ? "1" : ".45";
+  }
   function rendu() {
-    var ok = m.points !== "";
-    var apercu = ok ? calculTarot({ preneur: m.preneur, partenaire: m.partenaire, contrat: m.contrat, bouts: m.bouts, points: +m.points, petit: m.petit, poignee: m.poignee, chelem: m.chelem }, n) : null;
-    var f = v.querySelector(".feuille");
-    f.innerHTML = "<h3>Donne " + (p.manches.length + 1) + "</h3>" +
+    var f = v.querySelector(".feuille"), y = f.scrollTop;
+    f.innerHTML = "<h3>Donne " + (p.manches.length + 1) + '</h3><div data-apercu class="apercu"></div>' +
       "<label>Preneur</label>" + choix("preneur", p.noms.map(function (x, i) { return [i, esc(x)]; })) +
       (n === 5 ? "<label>Appelé (partenaire)</label>" + choix("partenaire", p.noms.map(function (x, i) { return [i, esc(x)]; })) + '<p class="aide">S’il s’est appelé lui-même, choisis le preneur.</p>' : "") +
       "<label>Contrat</label>" + choix("contrat", [["petite", "Petite ×1"], ["garde", "Garde ×2"], ["sans", "Garde sans ×4"], ["contre", "Garde contre ×6"]]) +
@@ -336,13 +357,14 @@ function mancheTarot(p) {
       "<label>Petit au bout</label>" + choix("petit", [[0, "Non"], ["att", "Attaque"], ["def", "Défense"]]) +
       "<label>Poignée</label>" + choix("poignee", [[0, "Non"], [1, "Simple 20"], [2, "Double 30"], [3, "Triple 40"]]) +
       "<label>Chelem</label>" + choix("chelem", [[0, "Non"], ["annonce", "Annoncé réussi +400"], ["nonannonce", "Non annoncé +200"], ["rate", "Annoncé raté −200"]]) +
-      (apercu ? '<div class="carte" style="margin-top:14px"><b>' + (+m.points >= BESOIN[m.bouts] ? "✅ Fait" : "❌ Chuté") + "</b> · " + p.noms.map(function (x, i) { return esc(x) + " " + (apercu[i] > 0 ? "+" : "") + apercu[i]; }).join(" · ") + "</div>" : "") +
-      '<div class="deux" style="margin-top:14px"><button class="btn" data-annul>Annuler</button><button class="btn vert" data-ok' + (ok ? "" : ' disabled style="opacity:.45"') + ">Valider</button></div>";
+      '<div class="deux actions-fixes"><button class="btn" data-annul>Annuler</button><button class="btn vert" data-ok>Valider</button></div>';
+    f.scrollTop = y;
     f.querySelectorAll("[data-c]").forEach(function (b) { b.onclick = function () { var c = b.dataset.c, val = b.dataset.v; m[c] = /^\d+$/.test(val) ? +val : val; rendu(); }; });
-    var pts = f.querySelector("[data-pts]"); pts.onchange = function () { m.points = pts.value === "" ? "" : Math.max(0, Math.min(91, +pts.value)); rendu(); };
-    pts.onkeyup = function (e) { if (e.key === "Enter") pts.onchange(); };
+    var pts = f.querySelector("[data-pts]");
+    pts.oninput = function () { m.points = pts.value === "" ? "" : Math.max(0, Math.min(91, +pts.value)); majApercu(); };
     f.querySelector("[data-annul]").onclick = function () { v.remove(); };
-    f.querySelector("[data-ok]").onclick = function () { if (!apercu) return; v.remove(); ajouterManche(p, { s: apercu, info: { petite: "P", garde: "G", sans: "GS", contre: "GC" }[m.contrat] + " " + p.noms[m.preneur].slice(0, 5) }); };
+    f.querySelector("[data-ok]").onclick = function () { var ap = calcul(); if (!ap) return; v.remove(); ajouterManche(p, { s: ap, info: { petite: "P", garde: "G", sans: "GS", contre: "GC" }[m.contrat] + " " + p.noms[m.preneur].slice(0, 5) }); };
+    majApercu();
   }
   rendu();
 }
@@ -401,8 +423,8 @@ function caseYams(p, i, k) {
 // ---------- Règles ----------
 function regles(jeu) {
   var R = {
-    belote: "<ul><li>Chaque donne rapporte 162 points (dix de der compris).</li><li>Le preneur doit faire plus de points que la défense, sinon il est « dedans » : la défense marque 162.</li><li>Belote-Rebelote (roi + dame d’atout) : +20 pour l’équipe qui l’annonce, même dedans.</li><li>Capot (tous les plis) : 252 points.</li><li>La partie se joue en 501, 1000, 1500 ou 2000 points.</li></ul>",
-    tarot: "<ul><li>Points à faire selon les bouts : 0 bout = 56, 1 = 51, 2 = 41, 3 = 36.</li><li>Score = (25 + écart) × contrat : Petite ×1, Garde ×2, Garde sans ×4, Garde contre ×6.</li><li>Petit au bout : ±10 × contrat. Poignée : 20, 30 ou 40 pour le camp gagnant. Chelem : +400 annoncé, +200 non annoncé, −200 raté.</li><li>À 3 ou 4 joueurs, le preneur marque le score × (joueurs − 1), chaque défenseur le perd. À 5 : preneur ×2, appelé ×1.</li><li>La somme des scores de chaque donne fait toujours 0.</li></ul>",
+    belote: "<ul><li>Chaque donne rapporte 162 points (dix de der compris).</li><li>Le preneur doit faire plus de points que la défense, sinon il est « dedans » : la défense marque 162.</li><li>Belote-Rebelote (roi + dame d’atout) : +20 pour l’équipe qui l’annonce, même dedans.</li><li>Capot (tous les plis) : 252 points.</li><li>Égalité (81-81) : « litige ». La défense marque ses 81 points, ceux du preneur restent en suspens et reviennent à l’équipe qui gagne la donne suivante.</li><li>La partie se joue en 501, 1000, 1500 ou 2000 points.</li></ul>",
+    tarot: "<ul><li>Points à faire selon les bouts : 0 bout = 56, 1 = 51, 2 = 41, 3 = 36.</li><li>Score = (25 + écart) × contrat : Petite ×1, Garde ×2, Garde sans ×4, Garde contre ×6.</li><li>Petit au bout : ±10 × contrat. Poignée : 20, 30 ou 40 pour le camp gagnant. Chelem : +400 annoncé, +200 non annoncé, −200 raté.</li><li>À 3 ou 4 joueurs, le preneur marque le score × (joueurs − 1), chaque défenseur le perd. À 5 : preneur ×2, appelé ×1.</li><li>Un demi-point d’écart est arrondi au point supérieur. La somme des scores de chaque donne fait toujours 0.</li></ul>",
     yams: "<ul><li>Haut : total des dés de la valeur (as à six). Bonus de 35 si le total du haut atteint 63.</li><li>Brelan, carré et chance : somme des 5 dés.</li><li>Full 25, petite suite 30, grande suite 40, Yams 50.</li><li>Une case barrée vaut 0. Le plus gros total gagne.</li></ul>",
     rami: "<ul><li>À chaque manche, chacun compte les points des cartes qui lui restent en main (0 pour celui qui a fini).</li><li>Les points s’additionnent : le joueur qui atteint la limite choisie (100, 200, 300 ou 500) a perdu.</li><li>Le joueur avec le moins de points gagne.</li></ul>"
   }[jeu];
@@ -419,14 +441,14 @@ function interstitiel() {
 }
 function reglages() {
   feuille("<h3>Réglages</h3>" +
-    '<div class="carte" style="margin-top:10px"><b>Sans pub</b><p class="aide">Retire la petite pub de fin de partie, pour toujours.</p>' + (S.noads ? '<p style="margin-top:8px;font-weight:700;color:var(--vert2)">✓ Activé, merci !</p>' : '<button class="btn or" style="margin-top:10px" data-acheter>Acheter « Sans pub »</button>') + "</div>" +
-    '<div class="pile" style="margin-top:12px"><button class="btn" data-restaurer>Restaurer mes achats</button>' + (H("ads") ? '<button class="btn" data-consent>Choix publicitaires</button>' : "") +
+    (BOUTIQUE ? '<div class="carte" style="margin-top:10px"><b>Sans pub</b><p class="aide">Retire la petite pub de fin de partie, pour toujours.</p>' + (S.noads ? '<p style="margin-top:8px;font-weight:700;color:var(--vert2)">✓ Activé, merci !</p>' : '<button class="btn or" style="margin-top:10px" data-acheter>Acheter « Sans pub »</button>') + "</div>" : "") +
+    '<div class="pile" style="margin-top:12px">' + (BOUTIQUE ? '<button class="btn" data-restaurer>Restaurer mes achats</button>' : "") + (H("ads") ? '<button class="btn" data-consent>Choix publicitaires</button>' : "") +
     '<button class="btn" data-joueurs>Effacer la liste des joueurs</button><button class="btn" data-fermer>Fermer</button></div><p class="aide" style="text-align:center;margin-top:10px">Tes parties restent sur ton téléphone.</p>', function (v) {
     var a = v.querySelector("[data-acheter]"); if (a) a.onclick = function () {
       if (!H("store")) { S.noads = true; sauver(); toast("Merci ! (achat test)"); v.remove(); return; }
       natif("store", { op: "buy", id: PID }).then(function (r) { if (r) { S.noads = true; sauver(); toast("Merci ! Plus de pub."); } v.remove(); });
     };
-    v.querySelector("[data-restaurer]").onclick = function () { natif("store", { op: "restore" }).then(function (l) { if (Array.isArray(l) && l.indexOf(PID) >= 0) { S.noads = true; sauver(); } toast("Achats restaurés"); v.remove(); }); };
+    var rs = v.querySelector("[data-restaurer]"); if (rs) rs.onclick = function () { natif("store", { op: "restore" }).then(function (l) { if (Array.isArray(l) && l.indexOf(PID) >= 0) { S.noads = true; sauver(); } toast("Achats restaurés"); v.remove(); }); };
     var c = v.querySelector("[data-consent]"); if (c) c.onclick = function () { natif("ads", { op: "consentForm" }); };
     v.querySelector("[data-joueurs]").onclick = function () { if (confirm("Effacer tous les joueurs enregistrés ?")) { S.joueurs = []; sauver(); v.remove(); accueil(); } };
     v.querySelector("[data-fermer]").onclick = function () { v.remove(); };

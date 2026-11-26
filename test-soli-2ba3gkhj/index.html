@@ -127,7 +127,7 @@ function render() {
   G.waste.slice(-3).forEach((c, i, a) => { h += cardHTML(c, X(1) + i * cw * 0.28, top, z++, i === a.length - 1 ? 'w' : 'x', 0, G.waste.length - 1); });
   G.found.forEach((f, k) => { if (f.length) h += cardHTML(f[f.length - 1], X(3 + k), top, z++, 'f', k, f.length - 1); });
   const room = board.clientHeight - tabY - ch;
-  G.tab.forEach((t, k) => { const ups = t.filter(c => c.up).length, downs = t.length - ups; let dUp = ch * 0.3, dDown = ch * 0.13, minUp = Math.max(13, cw * 0.4); const need = downs * dDown + Math.max(0, ups - 1) * dUp; if (need > room && need > 0) { dDown = Math.max(3, Math.min(dDown, (room - Math.max(0, ups - 1) * minUp) / Math.max(1, downs))); const left = room - downs * dDown; if (ups > 1) dUp = Math.max(Math.min(dUp, left / (ups - 1)), Math.min(minUp, dUp)); }
+  G.tab.forEach((t, k) => { const ups = t.filter(c => c.up).length, downs = t.length - ups; let dUp = ch * 0.3, dDown = ch * 0.13, minUp = Math.max(9, Math.min(cw * 0.4, ch * 0.2)); const need = downs * dDown + Math.max(0, ups - 1) * dUp; if (need > room && need > 0) { dDown = Math.max(3, Math.min(dDown, (room - Math.max(0, ups - 1) * minUp) / Math.max(1, downs))); const left = room - downs * dDown; if (ups > 1) dUp = Math.max(4, Math.min(dUp, left / (ups - 1))); }
     let y = tabY; t.forEach((c, i) => { h += cardHTML(c, X(k), y, z++, 't', k, i); y += c.up ? dUp : dDown; }); });
   board.innerHTML = h; const t = T();
   $('moves').textContent = fmt(t.moves, { n: G.moves }); $('timer').textContent = clockStr(elapsed());

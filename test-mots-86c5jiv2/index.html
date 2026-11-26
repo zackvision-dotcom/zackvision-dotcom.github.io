@@ -31,7 +31,7 @@
   #words span.done{text-decoration:line-through;opacity:.45}
   #words span.hint{outline:2px solid var(--accent)}
   .bar{display:flex;gap:8px;align-items:center;justify-content:space-between}
-  #win{position:fixed;inset:0;background:rgba(59,42,26,.45);display:flex;align-items:center;justify-content:center;padding:20px}
+  #win{z-index:50;position:fixed;inset:0;background:rgba(59,42,26,.45);display:flex;align-items:center;justify-content:center;padding:20px}
   .card{background:var(--bg);border-radius:22px;padding:22px;text-align:center;max-width:360px;width:100%;box-shadow:0 6px 0 var(--edge)}
   .card h2{margin:0 0 6px;font-size:26px}.stars{font-size:38px;letter-spacing:4px}
   [hidden]{display:none!important}
@@ -89,7 +89,7 @@ let lang = (navigator.language || 'en').startsWith('fr') ? 'fr' : 'en';
 const KEY = 'motsmeles.save.v1';
 let S = { lang: null, muted: false, size: 1, levels: {}, daily: '', streak: 0, hints: 3, hintDay: '', plays: 0 };
 try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+const save = () => { try { S.cur = G && !G.words.every(w => w.found) ? Object.assign({}, G, { el: Date.now() - t0 }) : null; localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 if (S.lang) lang = S.lang;
 const T = () => L[lang], fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]), $ = id => document.getElementById(id);
 const today = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
@@ -114,7 +114,7 @@ function make(theme, size, seed) {
   const R = rng(seed), cfg = SIZES[size], n = cfg.n, pool = T().words[theme].split(' ').filter(w => plain(w).length <= n && plain(w).length >= 3);
   for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
   const g = Array.from({ length: n }, () => Array(n).fill('')), placed = [];
-  for (const w of pool) { if (placed.length >= cfg.words) break; const p = plain(w); let ok = false;
+  for (const w of pool) { if (placed.length >= cfg.words) break; const p = plain(w); let ok = false; if (placed.some(o => o.p.includes(p) || p.includes(o.p))) continue;
     for (let tries = 0; tries < 120 && !ok; tries++) { const [dx, dy] = cfg.dirs[Math.floor(R() * cfg.dirs.length)], x0 = Math.floor(R() * n), y0 = Math.floor(R() * n), x1 = x0 + dx * (p.length - 1), y1 = y0 + dy * (p.length - 1);
       if (x1 < 0 || x1 >= n || y1 < 0 || y1 >= n) continue; let fit = true; for (let k = 0; k < p.length; k++) { const c = g[y0 + dy * k][x0 + dx * k]; if (c && c !== p[k]) { fit = false; break; } }
       if (!fit) continue; for (let k = 0; k < p.length; k++) g[y0 + dy * k][x0 + dx * k] = p[k]; placed.push({ w, p, x0, y0, x1, y1, found: false }); ok = true; } }
@@ -156,8 +156,10 @@ wrap.addEventListener('pointermove', e => { if (!sel) return; const c = cellAt(e
   let x1 = sel.x0 + dx, y1 = sel.y0 + dy; const n = G.n; while (x1 < 0 || x1 >= n || y1 < 0 || y1 >= n) { x1 -= Math.sign(dx); y1 -= Math.sign(dy); }
   if (x1 !== sel.x1 || y1 !== sel.y1) { sel.x1 = x1; sel.y1 = y1; lines(); } });
 const endSel = () => { if (!sel) return; const s = sel; sel = null;
-  const w = G.words.find(w => !w.found && ((w.x0 === s.x0 && w.y0 === s.y0 && w.x1 === s.x1 && w.y1 === s.y1) || (w.x0 === s.x1 && w.y0 === s.y1 && w.x1 === s.x0 && w.y1 === s.y0)));
-  if (w) { w.found = true; hintCell = null; const i = G.words.indexOf(w); $('w' + i).className = 'done'; beep(660, 0.1); beep(880, 0.14, 'triangle', 0.12, 0.09); if (G.words.every(x => x.found)) setTimeout(win, 350); }
+  const dx = Math.sign(s.x1 - s.x0), dy = Math.sign(s.y1 - s.y0), len = Math.max(Math.abs(s.x1 - s.x0), Math.abs(s.y1 - s.y0)) + 1; let str = ''; for (let k = 0; k < len; k++) str += G.g[s.y0 + dy * k][s.x0 + dx * k];
+  const rev = [...str].reverse().join(''), w = G.words.find(w => !w.found && (w.p === str || w.p === rev));
+  if (w) { w.x0 = s.x0; w.y0 = s.y0; w.x1 = s.x1; w.y1 = s.y1; }
+  if (w) { w.found = true; hintCell = null; const i = G.words.indexOf(w); $('w' + i).className = 'done'; beep(660, 0.1); beep(880, 0.14, 'triangle', 0.12, 0.09); save(); if (G.words.every(x => x.found)) setTimeout(win, 350); }
   lines(); };
 wrap.addEventListener('pointerup', endSel); wrap.addEventListener('pointercancel', endSel);
 // ---------- hints ----------
@@ -175,7 +177,7 @@ $('next').onclick = async () => { if (S.plays % 3 === 0) await ad('interstitial'
 $('home2').onclick = () => home();
 // ---------- home ----------
 function home() {
-  G = null; clearInterval(tick); $('win').hidden = true; $('game').hidden = true; $('home').hidden = false; $('back').hidden = true; const t = T(); document.title = t.title; document.documentElement.lang = lang;
+  G = null; S.cur = null; save(); clearInterval(tick); $('win').hidden = true; $('game').hidden = true; $('home').hidden = false; $('back').hidden = true; const t = T(); document.title = t.title; document.documentElement.lang = lang;
   $('ttl').textContent = t.title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; $('snd').textContent = S.muted ? '🔇' : '🔊';
   $('dT').textContent = '📅 ' + t.daily; $('dS').textContent = (S.daily === today() ? t.done + ' · ' : '') + fmt(t.streak, { n: S.daily === today() || S.daily === yesterday() ? S.streak : 0 });
   $('sizes').innerHTML = t.sizes.map((s, i) => `<button class="pill ${i === S.size ? 'on' : ''}" data-s="${i}">${s}</button>`).join('');
@@ -183,11 +185,11 @@ function home() {
 }
 $('sizes').onclick = e => { const b = e.target.closest('[data-s]'); if (b) { S.size = +b.dataset.s; save(); home(); } };
 $('themes').onclick = e => { const b = e.target.closest('[data-t]'); if (b) start(b.dataset.t, false); };
-$('daily').onclick = () => start(null, true);
+$('daily').onclick = () => { if (S.daily === today()) { $('dS').textContent = T().done + ' · ' + fmt(T().streak, { n: S.streak }); beep(330, 0.1); return; } start(null, true); };
 $('back').onclick = home;
 $('lang').onclick = () => { lang = lang === 'fr' ? 'en' : 'fr'; S.lang = lang; save(); home(); };
 $('snd').onclick = () => { S.muted = !S.muted; save(); home(); };
-home();
+if (S.cur && S.cur.g) { G = S.cur; t0 = Date.now() - (S.cur.el || 0); $('home').hidden = true; $('game').hidden = false; $('back').hidden = false; $('ttl').textContent = T().title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; draw(); tick = setInterval(clockTick, 500); } else home();
 window.MM = { get G() { return G; }, S, start, win, endSel: () => endSel(), setSel: s => { sel = s; } }; // debug hook for automated tests
 </script>
 </body>

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Logimages</title><meta name="robots" content="noindex,nofollow">
+<style>
+  :root{--bg:#eef3fb;--ink:#22304a;--card:#fff;--edge:#cfdaee;--fill:#2f4b8a;--accent:#f0683c;--soft:#dde6f6}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:ui-rounded,"Nunito","Segoe UI Rounded",system-ui,-apple-system,"Segoe UI",sans-serif;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;overflow:hidden}
+  #app{height:100%;max-width:560px;margin:0 auto;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+  header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px}
+  h1{font-size:22px;margin:0}
+  button{font-family:inherit;border:0;cursor:pointer;color:inherit}
+  .pill{background:var(--card);border-radius:14px;padding:8px 12px;font-weight:800;font-size:14px;box-shadow:0 3px 0 var(--edge)}
+  .screen{flex:1;display:flex;flex-direction:column;gap:12px;min-height:0}
+  #home{overflow:auto}
+  .daily{background:linear-gradient(135deg,#9db8f5,#c7a8f0);border-radius:20px;padding:16px;box-shadow:0 4px 0 #8a93cf;text-align:center}
+  .daily b{font-size:19px;display:block}.daily small{font-weight:700;opacity:.8}
+  .packs{display:grid;gap:10px}
+  .pack{background:var(--card);border-radius:16px;padding:14px;box-shadow:0 3px 0 var(--edge);text-align:left;font-weight:800;font-size:16px;display:flex;justify-content:space-between;align-items:center}
+  .pack small{font-weight:700;opacity:.6}
+  .how{background:var(--soft);border-radius:14px;padding:10px 12px;font-weight:600;font-size:13px;line-height:1.4}
+  .bar{display:flex;gap:8px;align-items:center;justify-content:space-between}
+  #boardWrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+  #board{display:grid;background:var(--card);border-radius:14px;padding:6px;box-shadow:0 4px 0 var(--edge);touch-action:none}
+  .clue{display:flex;align-items:flex-end;justify-content:center;font-weight:800;color:#5a6a8a;line-height:1.05}
+  .clue.top{flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:2px}
+  .clue.left{justify-content:flex-end;align-items:center;gap:.35em;padding-right:4px}
+  .clue.ok{opacity:.3}
+  .cell{border:1px solid #c7d2e6;display:flex;align-items:center;justify-content:center;font-weight:900;color:#9aa8c4}
+  .cell.f{background:var(--fill);border-color:var(--fill)}
+  .cell.bad{animation:bad .4s}
+  @keyframes bad{50%{background:#ffb3a6}}
+  .cell.t5{border-top:2px solid #6f7fa3}.cell.l5{border-left:2px solid #6f7fa3}
+  .modes{display:flex;gap:10px;justify-content:center}
+  .modes button{flex:1;max-width:160px;background:var(--card);border-radius:16px;padding:14px;font-weight:900;font-size:17px;box-shadow:0 3px 0 var(--edge)}
+  .modes .on{background:var(--ink);color:#fff}
+  #win{position:fixed;inset:0;background:rgba(34,48,74,.5);display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{background:var(--bg);border-radius:22px;padding:22px;text-align:center;max-width:340px;width:100%}
+  .card h2{margin:0 0 6px;font-size:25px}.stars{font-size:36px;letter-spacing:4px}
+  .cta{background:var(--accent);color:#fff;border-radius:16px;padding:13px 16px;font-weight:900;font-size:16px;width:100%;margin-top:10px;box-shadow:0 4px 0 #a8431f}
+  .alt{background:var(--card);color:var(--ink);box-shadow:0 3px 0 var(--edge)}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><button id="back" class="pill" hidden>←</button><h1 id="ttl"></h1><div style="display:flex;gap:6px"><button id="lang" class="pill"></button><button id="snd" class="pill">🔊</button></div></header>
+  <div id="home" class="screen">
+    <button id="daily" class="daily"><b id="dT"></b><small id="dS"></small></button>
+    <div class="packs" id="packs"></div>
+    <div class="how" id="how"></div>
+  </div>
+  <div id="game" class="screen" hidden>
+    <div class="bar"><div class="pill" id="info"></div><div class="pill" id="lives"></div><button class="pill" id="hint"></button></div>
+    <div id="boardWrap"><div id="board"></div></div>
+    <div class="modes"><button id="mFill">■</button><button id="mCross">✕</button></div>
+  </div>
+</div>
+<div id="win" hidden><div class="card"><div class="stars" id="stars"></div><h2 id="wT"></h2><p id="wS" style="font-weight:700"></p><button class="cta" id="next"></button><button class="cta alt" id="again" hidden></button><button class="cta alt" id="home2"></button></div></div>
+<script>
+'use strict';
+const L = {
+  fr: { title: 'Logimages', daily: '📅 Grille du jour', streak: 'Série : {n} jour(s)', done: 'Terminée aujourd\'hui ✔ · ', packs: ['Débutant 5×5', 'Classique 10×10', 'Expert 15×15'], level: 'grille {n}', hint: '💡 ({n})', hintAd: '💡 🎬', win: 'Bravo !', lose: 'Plus de vies…', its: 'C\'était : {x}', next: 'Grille suivante', again: 'Réessayer', cont: '🎬 Continuer (+1 vie)', home: 'Accueil',
+    how: 'Les chiffres indiquent les groupes de cases à noircir dans chaque ligne et colonne, dans l\'ordre. ■ pour noircir, ✕ pour marquer une case vide. 3 erreurs et c\'est perdu !',
+    names: { heart: 'un cœur', house: 'une maison', tree: 'un sapin', mushroom: 'un champignon', fish: 'un poisson', star: 'une étoile', boat: 'un voilier', diamond: 'un losange', smile: 'un sourire', arrow: 'une flèche', cross: 'une croix', cup: 'une tasse', rnd: 'un motif mystère' } },
+  en: { title: 'Nonogram', daily: '📅 Daily puzzle', streak: 'Streak: {n} day(s)', done: 'Done today ✔ · ', packs: ['Beginner 5×5', 'Classic 10×10', 'Expert 15×15'], level: 'puzzle {n}', hint: '💡 ({n})', hintAd: '💡 🎬', win: 'Well done!', lose: 'Out of lives…', its: 'It was: {x}', next: 'Next puzzle', again: 'Try again', cont: '🎬 Continue (+1 life)', home: 'Home',
+    how: 'The numbers tell you the groups of cells to fill in each row and column, in order. ■ to fill, ✕ to mark an empty cell. 3 mistakes and it\'s over!',
+    names: { heart: 'a heart', house: 'a house', tree: 'a fir tree', mushroom: 'a mushroom', fish: 'a fish', star: 'a star', boat: 'a sailboat', diamond: 'a diamond', smile: 'a smile', arrow: 'an arrow', cross: 'a cross', cup: 'a cup', rnd: 'a mystery pattern' } },
+};
+const ART = {
+  5: [['diamond', '..#..,.###.,#####,.###.,..#..'], ['heart', '.#.#.,#####,#####,.###.,..#..'], ['smile', '.#.#.,.#.#.,.....,#...#,.###.'], ['arrow', '..#..,.###.,#.#.#,..#..,..#..'], ['house', '..#..,.###.,#####,#.#.#,#.###'], ['cross', '#...#,.#.#.,..#..,.#.#.,#...#'], ['tree', '..#..,.###.,#####,..#..,.###.'], ['cup', '####.,#####,####.,####.,.##..']],
+  10: [['heart', '..##..##..,.########.,##########,##########,##########,.########.,..######..,...####...,....##....,..........'],
+       ['house', '....##....,...####...,..######..,.########.,##########,.########.,.##.##.##.,.##.##.##.,.#####.##.,.#####.##.'],
+       ['tree', '....##....,...####...,..######..,.########.,..######..,.########.,##########,....##....,....##....,...####...'],
+       ['mushroom', '...####...,.########.,##.####.##,##########,##########,...####...,...####...,...####...,..######..,..........'],
+       ['fish', '..........,..####...#,.######.##,##########,##.#######,##########,.######.##,..####...#,..........,..........'],
+       ['star', '....##....,....##....,...####...,##########,.########.,..######..,..######..,.###..###.,.##....##.,##......##'],
+       ['boat', '....#.....,....##....,....###...,....####..,....#####.,....#.....,##########,.########.,..######..,..........']],
+  15: [],
+};
+let lang = (navigator.language || 'en').startsWith('fr') ? 'fr' : 'en';
+const KEY = 'logimages.save.v1';
+let S = { lang: null, muted: false, lv: { 5: 0, 10: 0, 15: 0 }, daily: '', streak: 0, hints: 3, hintDay: '', plays: 0 };
+try { const o = JSON.parse(localStorage.getItem(KEY) || '{}'); Object.assign(S, o); S.lv = Object.assign({ 5: 0, 10: 0, 15: 0 }, o.lv || {}); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+if (S.lang) lang = S.lang;
+const T = () => L[lang], fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]), $ = id => document.getElementById(id);
+const dayKey = ms => { const d = new Date(ms); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+if (S.hintDay !== dayKey(Date.now())) { S.hintDay = dayKey(Date.now()); S.hints = Math.max(S.hints, 3); }
+const ADS = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.ads;
+const ad = kind => ADS ? Promise.resolve().then(() => ADS.postMessage({ op: kind })).then(ok => !!ok, () => false) : Promise.resolve(false);
+if (ADS) try { ADS.postMessage({ op: 'init' }); } catch (e) {}
+let ac = null; function beep(f, d = 0.07, v = 0.1, at = 0) { if (S.muted) return; try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + at; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + d + 0.02); } catch (e) {} }
+function rng(seed) { let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+const hash = str => { let h = 2166136261; for (const c of str) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
+
+// ---------- puzzles ----------
+function fromArt(str, n) { return str.split(',').slice(0, n).map(r => Array.from({ length: n }, (_, i) => r[i] === '#' ? 1 : 0)); }
+function randomSol(n, seed) { // mirrored blobs: pleasant, never an empty row or column
+  const R = rng(seed), g = Array.from({ length: n }, () => Array(n).fill(0)), half = Math.ceil(n / 2);
+  for (let y = 0; y < n; y++) for (let x = 0; x < half; x++) { const d = Math.hypot(x - n / 2 + 0.5, y - n / 2 + 0.5) / (n / 2); const v = R() < 0.72 - d * 0.35 ? 1 : 0; g[y][x] = v; g[y][n - 1 - x] = v; }
+  for (let y = 0; y < n; y++) if (!g[y].some(Boolean)) { const x = Math.floor(R() * half); g[y][x] = g[y][n - 1 - x] = 1; }
+  for (let x = 0; x < n; x++) if (!g.some(r => r[x])) { const y = Math.floor(R() * n); g[y][x] = g[y][n - 1 - x] = 1; }
+  return g;
+}
+const clues = line => { const o = []; let c = 0; for (const v of line) { if (v) c++; else if (c) { o.push(c); c = 0; } } if (c) o.push(c); return o.length ? o : [0]; };
+
+// ---------- game ----------
+let G = null, mode = 'f', drag = null;
+function start(n, daily) {
+  const lv = daily ? 0 : S.lv[n], art = !daily && ART[n][lv]; const sol = art ? fromArt(art[1], n) : randomSol(n, hash((daily ? 'daily' + dayKey(Date.now()) : 'lv' + lv) + n));
+  G = { n, sol, st: Array.from({ length: n }, () => Array(n).fill(0)), lives: 3, daily, lv, name: art ? art[0] : 'rnd', rows: sol.map(clues), cols: sol[0].map((_, x) => clues(sol.map(r => r[x]))), over: false, hints: 0 };
+  $('home').hidden = true; $('game').hidden = false; $('back').hidden = false; $('win').hidden = true; mode = 'f'; build(); paint();
+}
+function build() {
+  const n = G.n, b = $('board'), wrap = $('boardWrap'), maxR = Math.max(...G.rows.map(r => r.length)), maxC = Math.max(...G.cols.map(c => c.length));
+  const avail = Math.min(wrap.clientWidth, wrap.clientHeight) - 12, cs = Math.floor(avail / (n + Math.max(maxR, maxC) * 0.62 + 0.3)), cw = Math.ceil(cs * maxR * 0.62 + 6), chh = Math.ceil(cs * maxC * 0.62 + 4);
+  b.style.gridTemplateColumns = `${cw}px repeat(${n},${cs}px)`; b.style.gridTemplateRows = `${chh}px repeat(${n},${cs}px)`; b.style.fontSize = Math.max(9, cs * 0.5) + 'px';
+  let h = '<div></div>'; for (let x = 0; x < n; x++) h += `<div class="clue top" id="ct${x}">${G.cols[x].map(v => `<span>${v}</span>`).join('')}</div>`;
+  for (let y = 0; y < n; y++) { h += `<div class="clue left" id="cl${y}">${G.rows[y].map(v => `<span>${v}</span>`).join('')}</div>`; for (let x = 0; x < n; x++) h += `<div class="cell ${y % 5 === 0 && y ? 't5' : ''} ${x % 5 === 0 && x ? 'l5' : ''}" data-x="${x}" data-y="${y}"></div>`; }
+  b.innerHTML = h;
+}
+const cellEl = (x, y) => $('board').children[(y + 1) * (G.n + 1) + x + 1];
+function paint() {
+  const n = G.n; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) { const e = cellEl(x, y), s = G.st[y][x]; e.classList.toggle('f', s === 1); e.textContent = s === 2 ? '✕' : ''; }
+  for (let y = 0; y < n; y++) $('cl' + y).classList.toggle('ok', G.sol[y].every((v, x) => !v || G.st[y][x] === 1));
+  for (let x = 0; x < n; x++) $('ct' + x).classList.toggle('ok', G.sol.every((r, y) => !r[x] || G.st[y][x] === 1));
+  $('lives').textContent = '❤️'.repeat(Math.max(0, G.lives)) + '🤍'.repeat(3 - Math.max(0, Math.min(3, G.lives)));
+  const t = T(); $('info').textContent = G.daily ? t.daily : t.packs[[5, 10, 15].indexOf(n)].split(' ')[0] + ' · ' + fmt(t.level, { n: G.lv + 1 });
+  $('hint').textContent = S.hints > 0 ? fmt(t.hint, { n: S.hints }) : ADS ? t.hintAd : fmt(t.hint, { n: 0 }); $('hint').style.opacity = S.hints > 0 || ADS ? 1 : 0.4;
+  $('mFill').className = mode === 'f' ? 'on' : ''; $('mCross').className = mode === 'x' ? 'on' : '';
+}
+/** player marks a cell. Wrong guess = the truth is revealed and a life is lost. Finished lines get their blanks crossed automatically. */
+function mark(x, y, m) {
+  if (G.over || G.st[y][x]) return false; const truth = G.sol[y][x] ? 1 : 2, want = m === 'f' ? 1 : 2;
+  G.st[y][x] = truth;
+  if (want !== truth) { G.lives--; beep(160, 0.2, 0.14); const e = cellEl(x, y); e.classList.remove('bad'); void e.offsetWidth; e.classList.add('bad'); } else beep(truth === 1 ? 620 : 420, 0.04);
+  autoCross(x, y); paint();
+  if (G.lives <= 0) { G.over = true; setTimeout(() => end(false), 450); } else if (G.sol.every((r, yy) => r.every((v, xx) => !v || G.st[yy][xx] === 1))) { G.over = true; setTimeout(() => end(true), 350); }
+  return true;
+}
+function autoCross(x, y) { const n = G.n;
+  if (G.sol[y].every((v, i) => !v || G.st[y][i] === 1)) for (let i = 0; i < n; i++) if (!G.st[y][i]) G.st[y][i] = 2;
+  if (G.sol.every((r, j) => !r[x] || G.st[j][x] === 1)) for (let j = 0; j < n; j++) if (!G.st[j][x]) G.st[j][x] = 2; }
+const board = $('board');
+const at = e => { const el = document.elementFromPoint(e.clientX, e.clientY); return el && el.dataset && el.dataset.x !== undefined && el.closest('#board') ? [+el.dataset.x, +el.dataset.y] : null; };
+board.addEventListener('pointerdown', e => { if (!G || G.over) return; const c = at(e); if (!c) return; drag = { seen: new Set() }; drag.seen.add(c.join()); mark(c[0], c[1], mode); });
+board.addEventListener('pointermove', e => { if (!drag || !G || G.over) return; const c = at(e); if (!c || drag.seen.has(c.join())) return; drag.seen.add(c.join()); mark(c[0], c[1], mode); });
+addEventListener('pointerup', () => drag = null); addEventListener('pointercancel', () => drag = null);
+$('mFill').onclick = () => { mode = 'f'; paint(); }; $('mCross').onclick = () => { mode = 'x'; paint(); };
+$('hint').onclick = async () => { if (!G || G.over) return; if (S.hints <= 0) { if (!ADS || !(await ad('rewarded'))) return; S.hints = 1; }
+  const open = []; for (let y = 0; y < G.n; y++) for (let x = 0; x < G.n; x++) if (!G.st[y][x] && G.sol[y][x]) open.push([x, y]); if (!open.length) return; S.hints--; G.hints++; save(); const [x, y] = open[Math.floor(Math.random() * open.length)]; mark(x, y, 'f'); };
+function end(won) {
+  const t = T(); S.plays++;
+  if (won) { if (G.daily) { if (S.daily !== dayKey(Date.now())) { S.streak = S.daily === dayKey(Date.now() - 864e5) ? S.streak + 1 : 1; S.daily = dayKey(Date.now()); S.hints++; } } else S.lv[G.n] = G.lv + 1;
+    [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.25, 0.12, i * 0.1)); for (let y = 0; y < G.n; y++) for (let x = 0; x < G.n; x++) if (!G.st[y][x]) G.st[y][x] = 2; paint(); }
+  save(); const stars = won ? Math.max(1, G.lives - (G.hints ? 1 : 0)) : 0;
+  $('stars').textContent = won ? '⭐'.repeat(stars) + '☆'.repeat(3 - stars) : '💔'; $('wT').textContent = won ? t.win : t.lose; $('wS').textContent = won ? fmt(t.its, { x: t.names[G.name] }) + (G.daily ? ' · ' + fmt(t.streak, { n: S.streak }) : '') : '';
+  $('next').textContent = won ? t.next : ADS ? t.cont : t.again; $('next').hidden = won && G.daily; $('again').hidden = won || !ADS; $('again').textContent = t.again; $('home2').textContent = t.home; $('win').dataset.won = won ? 1 : 0; $('win').hidden = false;
+}
+$('next').onclick = async () => { const won = $('win').dataset.won === '1';
+  if (won) { if (S.plays % 3 === 0) await ad('interstitial'); start(G.n, false); }
+  else if (ADS) { if (await ad('rewarded')) { G.lives = 1; G.over = false; $('win').hidden = true; paint(); } }
+  else start(G.n, G.daily); };
+$('again').onclick = () => start(G.n, G.daily);
+$('home2').onclick = () => home();
+function home() {
+  G = null; $('win').hidden = true; $('game').hidden = true; $('home').hidden = false; $('back').hidden = true; const t = T(); document.title = t.title; document.documentElement.lang = lang;
+  $('ttl').textContent = t.title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; $('snd').textContent = S.muted ? '🔇' : '🔊'; $('how').textContent = t.how;
+  const live = S.daily === dayKey(Date.now()) || S.daily === dayKey(Date.now() - 864e5);
+  $('dT').textContent = t.daily; $('dS').textContent = (S.daily === dayKey(Date.now()) ? t.done : '') + fmt(t.streak, { n: live ? S.streak : 0 });
+  $('packs').innerHTML = [5, 10, 15].map((n, i) => `<button class="pack" data-n="${n}"><span>${t.packs[i]}</span><small>${fmt(t.level, { n: S.lv[n] + 1 })}</small></button>`).join('');
+}
+$('packs').onclick = e => { const b = e.target.closest('[data-n]'); if (b) start(+b.dataset.n, false); };
+$('daily').onclick = () => start(10, true); $('back').onclick = home;
+$('lang').onclick = () => { lang = lang === 'fr' ? 'en' : 'fr'; S.lang = lang; save(); G ? paint() : home(); if (G) { $('ttl').textContent = T().title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; } };
+$('snd').onclick = () => { S.muted = !S.muted; save(); $('snd').textContent = S.muted ? '🔇' : '🔊'; };
+addEventListener('resize', () => { if (G) { build(); paint(); } });
+home();
+window.LG = { get G() { return G; }, S, start, mark, ART, fromArt, clues, randomSol }; // debug hook for automated tests
+</script>
+</body>
+</html>

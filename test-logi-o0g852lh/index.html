@@ -199,7 +199,7 @@ $('daily').onclick = () => start(10, true); $('back').onclick = home;
 $('lang').onclick = () => { lang = lang === 'fr' ? 'en' : 'fr'; S.lang = lang; save(); G ? paint() : home(); if (G) { $('ttl').textContent = T().title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; } };
 $('snd').onclick = () => { S.muted = !S.muted; save(); $('snd').textContent = S.muted ? '🔇' : '🔊'; };
 addEventListener('resize', () => { if (G) { build(); paint(); } });
-if (S.cur && S.cur.sol) { G = S.cur; home.hidden = true; game.hidden = false; back.hidden = false; requestAnimationFrame(() => { build(); paint(); }); ttl.textContent = T().title; lang.textContent = lang === 'fr' ? 'EN' : 'FR'; } else home();
+if (S.cur && S.cur.sol) { G = S.cur; $('home').hidden = true; $('game').hidden = false; $('back').hidden = false; requestAnimationFrame(() => { build(); paint(); }); $('ttl').textContent = T().title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; $('snd').textContent = S.muted ? '🔇' : '🔊'; } else home();
 window.LG = { get G() { return G; }, S, start, mark, ART, fromArt, clues, randomSol, solvable }; // debug hook for automated tests
 </script>
 </body>

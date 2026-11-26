@@ -121,7 +121,7 @@ function calculBelote(m) {
     var bel = m.belote != null ? m.belote : -1;
     var totPren = pp + (bel === preneur ? 20 : 0), totDef = pd + (bel === def ? 20 : 0);
     if (totPren > totDef) { s[preneur] = pp; s[def] = pd; }
-    else if (totPren === totDef) { s[preneur] = 0; s[def] = pd; } // litige : les points du preneur restent en suspens
+    else if (totPren === totDef) { if (S.egalite === "partage") { s[preneur] = pp; s[def] = pd; } else { s[preneur] = 0; s[def] = pd; } } // litige : les points du preneur restent en suspens ; partage : chacun ses points
     else { s[preneur] = 0; s[def] = 162; } // dedans : la défense marque tout
   }
   if (m.belote != null && m.belote >= 0) s[m.belote] += 20;
@@ -131,13 +131,13 @@ function etatBelote(m) {
   if (m.capot) return "capot";
   var pp = Math.max(0, Math.min(162, m.ptsPreneur)), pd = 162 - pp, bel = m.belote != null ? m.belote : -1;
   var a = pp + (bel === m.preneur ? 20 : 0), d = pd + (bel === 1 - m.preneur ? 20 : 0);
-  return a > d ? "fait" : (a === d ? "litige" : "dedans");
+  return a > d ? "fait" : (a === d ? (S.egalite === "partage" ? "partage" : "litige") : "dedans");
 }
 // Tarot (barème FFT) : points à faire selon les bouts, (25 + écart + petit au bout) × contrat, poignée et chelem en plus.
 var BESOIN = [56, 51, 41, 36], MULT = { petite: 1, garde: 2, sans: 4, contre: 6 }, POIGNEE = { 0: 0, 1: 20, 2: 30, 3: 40 };
 function calculTarot(m, n) {
   var besoin = BESOIN[m.bouts], ecart = m.points - besoin, gagne = ecart >= 0;
-  ecart = Math.ceil(Math.abs(ecart)) * (gagne ? 1 : -1); // demi-point arrondi au point supérieur : scores entiers
+  ecart = (S.arrondi === "inf" ? Math.floor(Math.abs(ecart)) : Math.ceil(Math.abs(ecart))) * (gagne ? 1 : -1); // demi-point arrondi (supérieur par défaut, inférieur en option) : scores entiers
   var mult = MULT[m.contrat], signe = gagne ? 1 : -1;
   var petit = m.petit === "att" ? 10 : (m.petit === "def" ? -10 : 0);
   var chelem = { annonce: 400, nonannonce: 200, rate: -200 }[m.chelem] || 0;
@@ -255,7 +255,7 @@ function ouvrir(id) {
   var h = '<div class="entete"><div class="l1"><button class="ico" data-retour>‹</button><div style="flex:1"><h1>' + JEUX[p.jeu].em + " " + JEUX[p.jeu].nom + "</h1><p>" + (p.cible ? "Partie en " + p.cible + " pts · " : "") + p.manches.length + " manche(s)</p></div></div></div><div class=\"corps\">";
   h += '<div class="scores">' + p.noms.map(function (n, i) { return '<div class="score' + (p.manches.length && i === g ? " tete" : "") + '"><b>' + (p.manches.length && i === g ? "👑 " : "") + esc(n) + '</b><span class="pts' + (t[i] < 0 ? " neg" : "") + '">' + t[i] + "</span></div>"; }).join("") + "</div>";
   if (p.fin) h += '<div class="carte" style="margin-top:14px;text-align:center"><b>🏆 ' + esc(p.noms[g]) + " gagne la partie</b></div>";
-  else h += '<div style="margin-top:14px"><button class="btn vert" data-manche>+ Nouvelle manche</button></div>';
+  else h += (p.litige ? '<div class="carte" style="margin-top:14px;text-align:center"><b>⚖️ ' + p.litige + ' en jeu</b><p class="aide">Litige : ces points iront à l’équipe qui gagne la prochaine donne.</p></div>' : "") + '<div style="margin-top:14px"><button class="btn vert" data-manche>+ Nouvelle manche</button></div>';
   if (p.manches.length) {
     h += '<h2>Manches</h2><div class="carte tableau-wrap"><table class="manches"><tr><th>#</th>' + p.noms.map(function (n) { return "<th>" + esc(n) + "</th>"; }).join("") + "<th></th></tr>" +
       p.manches.map(function (m, k) { return "<tr><td>" + (k + 1) + (m.info ? " · " + esc(m.info) : "") + "</td>" + m.s.map(function (v) { return "<td>" + (v > 0 && p.jeu === "tarot" ? "+" : "") + v + "</td>"; }).join("") + '<td><button data-suppr="' + k + '" aria-label="Supprimer la manche">✕</button></td></tr>'; }).join("") + "</table></div>";
@@ -310,7 +310,7 @@ function mancheBelote(p) {
   function majApercu() {
     var ap = calculer(), z = v.querySelector("[data-apercu]"), ok = v.querySelector("[data-ok]");
     var et = ap && !m.capot ? etatBelote({ preneur: m.preneur, ptsPreneur: +m.ptsPreneur, belote: m.belote }) : "";
-    z.innerHTML = ap ? "<b>Cette manche" + (et === "dedans" ? " (dedans)" : et === "litige" ? " (litige : " + Math.max(0, Math.min(162, +m.ptsPreneur)) + " pts en suspens)" : "") + " :</b> " + p.noms.map(function (n, i) { return esc(n) + " +" + ap[i]; }).join(" · ") + (p.litige ? " · litige en attente : " + p.litige : "") : '<span style="color:var(--doux)">Tape les points du preneur pour voir le résultat</span>';
+    z.innerHTML = ap ? "<b>Cette manche" + (et === "dedans" ? " (dedans)" : et === "partage" ? " (égalité partagée)" : et === "litige" ? " (litige : " + Math.max(0, Math.min(162, +m.ptsPreneur)) + " pts en suspens)" : "") + " :</b> " + p.noms.map(function (n, i) { return esc(n) + " +" + ap[i]; }).join(" · ") + (p.litige ? " · " + p.litige + " pts en jeu (litige)" : "") : '<span style="color:var(--doux)">Tape les points du preneur pour voir le résultat</span>';
     ok.style.opacity = ap ? "1" : ".45";
   }
   function lier() {
@@ -423,12 +423,20 @@ function caseYams(p, i, k) {
 // ---------- Règles ----------
 function regles(jeu) {
   var R = {
-    belote: "<ul><li>Chaque donne rapporte 162 points (dix de der compris).</li><li>Le preneur doit faire plus de points que la défense, sinon il est « dedans » : la défense marque 162.</li><li>Belote-Rebelote (roi + dame d’atout) : +20 pour l’équipe qui l’annonce, même dedans.</li><li>Capot (tous les plis) : 252 points.</li><li>Égalité (81-81) : « litige ». La défense marque ses 81 points, ceux du preneur restent en suspens et reviennent à l’équipe qui gagne la donne suivante.</li><li>La partie se joue en 501, 1000, 1500 ou 2000 points.</li></ul>",
-    tarot: "<ul><li>Points à faire selon les bouts : 0 bout = 56, 1 = 51, 2 = 41, 3 = 36.</li><li>Score = (25 + écart) × contrat : Petite ×1, Garde ×2, Garde sans ×4, Garde contre ×6.</li><li>Petit au bout : ±10 × contrat. Poignée : 20, 30 ou 40 pour le camp gagnant. Chelem : +400 annoncé, +200 non annoncé, −200 raté.</li><li>À 3 ou 4 joueurs, le preneur marque le score × (joueurs − 1), chaque défenseur le perd. À 5 : preneur ×2, appelé ×1.</li><li>Un demi-point d’écart est arrondi au point supérieur. La somme des scores de chaque donne fait toujours 0.</li></ul>",
+    belote: "<ul><li>Chaque donne rapporte 162 points (dix de der compris).</li><li>Le preneur doit faire plus de points que la défense, sinon il est « dedans » : la défense marque 162.</li><li>Belote-Rebelote (roi + dame d’atout) : +20 pour l’équipe qui l’annonce, même dedans.</li><li>Capot (tous les plis) : 252 points.</li>" + (S.egalite === "partage" ? "<li>Égalité (81-81) : « partage ». Chaque équipe marque ses 81 points.</li>" : "<li>Égalité (81-81) : « litige ». La défense marque ses 81 points, ceux du preneur restent en jeu et reviennent à l’équipe qui gagne la donne suivante.</li>") + "<li>La partie se joue en 501, 1000, 1500 ou 2000 points.</li></ul>",
+    tarot: "<ul><li>Points à faire selon les bouts : 0 bout = 56, 1 = 51, 2 = 41, 3 = 36.</li><li>Score = (25 + écart) × contrat : Petite ×1, Garde ×2, Garde sans ×4, Garde contre ×6.</li><li>Petit au bout : ±10 × contrat. Poignée : 20, 30 ou 40 pour le camp gagnant. Chelem : +400 annoncé, +200 non annoncé, −200 raté.</li><li>À 3 ou 4 joueurs, le preneur marque le score × (joueurs − 1), chaque défenseur le perd. À 5 : preneur ×2, appelé ×1.</li><li>Un demi-point d’écart est arrondi au point " + (S.arrondi === "inf" ? "inférieur" : "supérieur") + ". La somme des scores de chaque donne fait toujours 0.</li></ul>",
     yams: "<ul><li>Haut : total des dés de la valeur (as à six). Bonus de 35 si le total du haut atteint 63.</li><li>Brelan, carré et chance : somme des 5 dés.</li><li>Full 25, petite suite 30, grande suite 40, Yams 50.</li><li>Une case barrée vaut 0. Le plus gros total gagne.</li></ul>",
     rami: "<ul><li>À chaque manche, chacun compte les points des cartes qui lui restent en main (0 pour celui qui a fini).</li><li>Les points s’additionnent : le joueur qui atteint la limite choisie (100, 200, 300 ou 500) a perdu.</li><li>Le joueur avec le moins de points gagne.</li></ul>"
   }[jeu];
-  feuille("<h3>" + JEUX[jeu].em + " Règles de calcul — " + JEUX[jeu].nom + '</h3><div class="regle">' + R + '</div><button class="btn" style="margin-top:14px" data-fermer>Fermer</button>', function (v) { v.querySelector("[data-fermer]").onclick = function () { v.remove(); }; });
+  var OPT = {
+    belote: ["egalite", "Égalité 81-81", [["litige", "Litige"], ["partage", "Partage"]]],
+    tarot: ["arrondi", "Arrondi des demi-points", [["sup", "Supérieur"], ["inf", "Inférieur"]]]
+  }[jeu], reg = "";
+  if (OPT) { var cur = S[OPT[0]] || OPT[2][0][0]; reg = '<label style="margin-top:14px">' + OPT[1] + ' (à choisir avant la partie)</label><div class="choix">' + OPT[2].map(function (o) { return '<button data-opt="' + o[0] + '"' + (cur === o[0] ? ' class="on"' : "") + ">" + o[1] + "</button>"; }).join("") + "</div>"; }
+  feuille("<h3>" + JEUX[jeu].em + " Règles de calcul — " + JEUX[jeu].nom + '</h3><div class="regle">' + R + "</div>" + reg + '<button class="btn" style="margin-top:14px" data-fermer>Fermer</button>', function (v) {
+    v.querySelector("[data-fermer]").onclick = function () { v.remove(); };
+    v.querySelectorAll("[data-opt]").forEach(function (b) { b.onclick = function () { S[OPT[0]] = b.dataset.opt; sauver(); v.remove(); regles(jeu); toast("Règle enregistrée"); }; });
+  });
 }
 
 // ---------- Pub discrète et « Sans pub » ----------

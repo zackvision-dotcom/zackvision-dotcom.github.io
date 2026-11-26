@@ -74,6 +74,8 @@ input:focus,select:focus{outline:2px solid var(--tapis);border-color:transparent
 .pave{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .pave button{padding:14px;border-radius:12px;background:#fff;border:1px solid var(--ligne);font-weight:800;font-size:1.1rem}
 .aide{font-size:.82rem;color:var(--doux);margin-top:6px}
+.apercu{min-height:52px;margin-top:10px;padding:12px 14px;border-radius:14px;background:#fff;border:1px solid var(--ligne);font-size:.92rem;display:flex;align-items:center}
+.choix.capot button{border-style:dashed}
 .regle{font-size:.88rem;line-height:1.55}
 .regle li{margin:4px 0 4px 18px}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--vert);color:#fff;padding:11px 16px;border-radius:12px;font-weight:700;z-index:60;max-width:90%;text-align:center}
@@ -281,13 +283,12 @@ function saisieManche(p) {
 function mancheBelote(p) {
   var m = { preneur: 0, ptsPreneur: "", belote: null, capot: 0 };
   function rendu() {
-    v.querySelector(".feuille").innerHTML = "<h3>Manche " + (p.manches.length + 1) + "</h3>" +
+    v.querySelector(".feuille").innerHTML = "<h3>Manche " + (p.manches.length + 1) + "</h3>" + '<div data-apercu class="apercu"></div>' +
       '<label>Qui a pris ?</label><div class="choix">' + p.noms.map(function (n, i) { return '<button data-pr="' + i + '"' + (m.preneur === i ? ' class="on"' : "") + ">" + esc(n) + "</button>"; }).join("") + "</div>" +
       '<label>Points faits par ' + esc(p.noms[m.preneur]) + ' (sur 162)</label><input type="number" inputmode="numeric" min="0" max="162" data-pts value="' + m.ptsPreneur + '" placeholder="ex. 94"' + (m.capot ? " disabled" : "") + ">" +
       '<p class="aide">L’autre équipe a automatiquement 162 − ce nombre. Si le preneur fait moins que la défense, il est « dedans » : la défense marque 162.</p>' +
       '<label>Belote-Rebelote</label><div class="choix"><button data-bel="-1"' + (m.belote == null ? ' class="on"' : "") + ">Personne</button>" + p.noms.map(function (n, i) { return '<button data-bel="' + i + '"' + (m.belote === i ? ' class="on"' : "") + ">" + esc(n) + "</button>"; }).join("") + "</div>" +
       '<label>Capot (tous les plis, 252 pts)</label><div class="choix"><button data-cap="0"' + (!m.capot ? ' class="on"' : "") + ">Non</button>" + p.noms.map(function (n, i) { return '<button data-cap="' + (i + 1) + '"' + (m.capot === i + 1 ? ' class="on"' : "") + ">" + esc(n) + "</button>"; }).join("") + "</div>" +
-      '<div data-apercu></div>' +
       '<div class="deux" style="margin-top:14px"><button class="btn" data-annul>Annuler</button><button class="btn vert" data-ok>Valider</button></div>';
     lier(); majApercu();
   }
@@ -297,7 +298,7 @@ function mancheBelote(p) {
   }
   function majApercu() {
     var ap = calculer(), z = v.querySelector("[data-apercu]"), ok = v.querySelector("[data-ok]");
-    z.innerHTML = ap ? '<div class="carte" style="margin-top:14px"><b>Cette manche :</b> ' + p.noms.map(function (n, i) { return esc(n) + " +" + ap[i]; }).join(" · ") + "</div>" : "";
+    z.innerHTML = ap ? "<b>Cette manche :</b> " + p.noms.map(function (n, i) { return esc(n) + " +" + ap[i]; }).join(" · ") : '<span style="color:var(--doux)">Tape les points du preneur pour voir le résultat</span>';
     ok.style.opacity = ap ? "1" : ".45";
   }
   function lier() {
@@ -305,7 +306,11 @@ function mancheBelote(p) {
     f.querySelectorAll("[data-pr]").forEach(function (b) { b.onclick = function () { m.preneur = +b.dataset.pr; rendu(); }; });
     var pts = f.querySelector("[data-pts]"); pts.oninput = function () { m.ptsPreneur = pts.value === "" ? "" : Math.max(0, Math.min(162, +pts.value)); majApercu(); };
     f.querySelectorAll("[data-bel]").forEach(function (b) { b.onclick = function () { var x = +b.dataset.bel; m.belote = x < 0 ? null : x; rendu(); }; });
-    f.querySelectorAll("[data-cap]").forEach(function (b) { b.onclick = function () { m.capot = +b.dataset.cap; rendu(); }; });
+    f.querySelectorAll("[data-cap]").forEach(function (b) { b.onclick = function () {
+      var x = +b.dataset.cap;
+      if (x && !confirm("Capot pour " + p.noms[x - 1] + " ? (252 points, tous les plis)")) return;
+      m.capot = x; rendu();
+    }; });
     f.querySelector("[data-annul]").onclick = function () { v.remove(); };
     f.querySelector("[data-ok]").onclick = function () {
       var s = calculer(); if (!s) return;

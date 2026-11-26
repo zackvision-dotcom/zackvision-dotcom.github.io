@@ -44,14 +44,14 @@
 <script>
 'use strict';
 const L = {
-  fr: { title: 'Solitaire', moves: '{n} coups', newG: 'Nouvelle', undo: '↩ Annuler', hint: '💡 Indice', hintN: '💡 Indice ({n})', hintAd: '💡 Indice 🎬', win: 'Gagné !', winS: '{t} · {n} coups', menu: 'Nouvelle partie', stats: 'Victoires : {w} · Série du jour : {s}', daily: '📅 Donne du jour', dailyDone: '📅 Donne du jour ✔', rand: '🔀 Donne au hasard', close: 'Continuer', auto: 'Fin automatique…' },
-  en: { title: 'Solitaire', moves: '{n} moves', newG: 'New', undo: '↩ Undo', hint: '💡 Hint', hintN: '💡 Hint ({n})', hintAd: '💡 Hint 🎬', win: 'You win!', winS: '{t} · {n} moves', menu: 'New game', stats: 'Wins: {w} · Daily streak: {s}', daily: '📅 Daily deal', dailyDone: '📅 Daily deal ✔', rand: '🔀 Random deal', close: 'Keep playing', auto: 'Auto-finishing…' },
+  fr: { title: 'Solitaire', moves: '{n} coups', newG: 'Nouvelle', undo: '↩ Annuler', hint: '💡 Indice', hintN: '💡 Indice ({n})', hintAd: '💡 Indice 🎬', win: 'Gagné !', winS: '{t} · {n} coups', menu: 'Nouvelle partie', stats: 'Victoires : {w} · Série du jour : {s}', daily: '📅 Donne du jour', dailyDone: '📅 Donne du jour ✔', rand: '🔀 Donne au hasard', close: 'Continuer', auto: 'Fin automatique…', stuck: 'Plus de coup possible' },
+  en: { title: 'Solitaire', moves: '{n} moves', newG: 'New', undo: '↩ Undo', hint: '💡 Hint', hintN: '💡 Hint ({n})', hintAd: '💡 Hint 🎬', win: 'You win!', winS: '{t} · {n} moves', menu: 'New game', stats: 'Wins: {w} · Daily streak: {s}', daily: '📅 Daily deal', dailyDone: '📅 Daily deal ✔', rand: '🔀 Random deal', close: 'Keep playing', auto: 'Auto-finishing…', stuck: 'No more moves' },
 };
 let lang = (navigator.language || 'en').startsWith('fr') ? 'fr' : 'en';
 const KEY = 'solitaire.save.v1';
 let S = { lang: null, muted: false, wins: 0, plays: 0, daily: '', streak: 0, hints: 3, hintDay: '', game: null };
 try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
-const save = () => { S.game = G ? { G, t: elapsed() } : null; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+const save = () => { S.game = G ? { G, t: elapsed(), undo: undo.slice(-40) } : null; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
 if (S.lang) lang = S.lang;
 const T = () => L[lang], fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]), $ = id => document.getElementById(id);
 const dayKey = ms => { const d = new Date(ms); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
@@ -112,7 +112,7 @@ function win() { G.won = true; tBase = tBase + Math.floor((Date.now() - t0) / 10
 
 // ---------- rendering ----------
 const board = $('board'); let cw = 50, ch = 70, gap = 6;
-function layout() { const W = board.clientWidth; gap = Math.max(4, W * 0.012); cw = (W - gap * 6) / 7; ch = Math.min(cw * 1.42, board.clientHeight * 0.24); }
+function layout() { const W = board.clientWidth, H = board.clientHeight; gap = Math.max(4, W * 0.012); cw = (W - gap * 6) / 7; ch = cw * 1.42; if (ch > H * 0.3) { ch = H * 0.3; cw = Math.min(cw, ch / 1.42); } }   // landscape: narrower cards rather than squashed ones
 const X = k => k * (cw + gap);
 function cardHTML(c, x, y, z, src, col, idx) {
   const fs = cw * 0.36, R = lang === 'fr' ? RANK : RANK_EN;
@@ -127,17 +127,17 @@ function render() {
   G.waste.slice(-3).forEach((c, i, a) => { h += cardHTML(c, X(1) + i * cw * 0.28, top, z++, i === a.length - 1 ? 'w' : 'x', 0, G.waste.length - 1); });
   G.found.forEach((f, k) => { if (f.length) h += cardHTML(f[f.length - 1], X(3 + k), top, z++, 'f', k, f.length - 1); });
   const room = board.clientHeight - tabY - ch;
-  G.tab.forEach((t, k) => { const ups = t.filter(c => c.up).length, downs = t.length - ups; let dUp = ch * 0.3, dDown = ch * 0.13; const need = downs * dDown + Math.max(0, ups - 1) * dUp; if (need > room && need > 0) { const f = room / need; dUp *= f; dDown *= f; }
+  G.tab.forEach((t, k) => { const ups = t.filter(c => c.up).length, downs = t.length - ups; let dUp = ch * 0.3, dDown = ch * 0.13, minUp = Math.max(13, cw * 0.4); const need = downs * dDown + Math.max(0, ups - 1) * dUp; if (need > room && need > 0) { dDown = Math.max(3, Math.min(dDown, (room - Math.max(0, ups - 1) * minUp) / Math.max(1, downs))); const left = room - downs * dDown; if (ups > 1) dUp = Math.max(Math.min(dUp, left / (ups - 1)), Math.min(minUp, dUp)); }
     let y = tabY; t.forEach((c, i) => { h += cardHTML(c, X(k), y, z++, 't', k, i); y += c.up ? dUp : dDown; }); });
   board.innerHTML = h; const t = T();
   $('moves').textContent = fmt(t.moves, { n: G.moves }); $('timer').textContent = clockStr(elapsed());
   $('hintB').textContent = S.hints > 0 ? fmt(t.hintN, { n: S.hints }) : ADS ? t.hintAd : fmt(t.hintN, { n: 0 }); $('hintB').style.opacity = S.hints > 0 || ADS ? 1 : 0.5; $('undoB').style.opacity = undo.length ? 1 : 0.5;
 }
 board.addEventListener('click', e => { if (!G || G.won) return; const el = e.target.closest('[data-src]'); if (!el) return; const s = el.dataset.src; if (s === 's') tapStock(); else if (s !== 'x') tapCard(s, +el.dataset.col, +el.dataset.idx, el); });
-$('undoB').onclick = () => { if (!undo.length || G.won) return; clearInterval(autoRun); const m = G.moves; G = JSON.parse(undo.pop()); G.moves = m + 1; hintId = null; beep(350, 0.06); save(); render(); };
-$('hintB').onclick = async () => { if (!G || G.won) return; if (S.hints <= 0) { if (!ADS || !(await ad('rewarded'))) return; S.hints = 1; } const h = findHint(); if (h === null) { menu(false); return; } S.hints--; hintId = h; save(); render(); beep(440, 0.12); };
+$('undoB').onclick = () => { if (!undo.length || G.won) return; clearInterval(autoRun); G = JSON.parse(undo.pop()); hintId = null; beep(350, 0.06); save(); render(); };
+$('hintB').onclick = async () => { if (!G || G.won) return; if (S.hints <= 0) { if (!ADS || !(await ad('rewarded'))) return; S.hints = 1; } const h = findHint(); if (h === null) { menu(false, true); return; } S.hints--; hintId = h; save(); render(); beep(440, 0.12); };
 // ---------- menu ----------
-function menu(won) { const t = T(); $('mT').textContent = won ? t.win : t.menu; $('mS').textContent = (won ? fmt(t.winS, { t: clockStr(tBase), n: G.moves }) + ' — ' : '') + fmt(t.stats, { w: S.wins, s: S.daily === dayKey(Date.now()) || S.daily === dayKey(Date.now() - 864e5) ? S.streak : 0 });
+function menu(won, stuck) { const t = T(); $('mT').textContent = won ? t.win : stuck ? t.stuck : t.menu; $('mS').textContent = (won ? fmt(t.winS, { t: clockStr(tBase), n: G.moves }) + ' — ' : '') + fmt(t.stats, { w: S.wins, s: S.daily === dayKey(Date.now()) || S.daily === dayKey(Date.now() - 864e5) ? S.streak : 0 });
   $('dailyB').textContent = S.daily === dayKey(Date.now()) ? t.dailyDone : t.daily; $('randB').textContent = t.rand; $('closeB').textContent = t.close; $('closeB').hidden = !!won; $('menu').hidden = false; }
 $('newB').onclick = () => menu(false); $('closeB').onclick = () => { $('menu').hidden = true; };
 const begin = async daily => { $('menu').hidden = true; if (S.plays > 0 && S.plays % 2 === 0) await ad('interstitial'); deal(daily ? hash('daily' + dayKey(Date.now())) : (Math.random() * 4294967296) >>> 0, daily); };
@@ -147,7 +147,7 @@ $('lang').onclick = () => { lang = lang === 'fr' ? 'en' : 'fr'; S.lang = lang; s
 $('snd').onclick = () => { S.muted = !S.muted; save(); texts(); };
 addEventListener('resize', () => G && render()); addEventListener('pagehide', () => G && !G.won && save());
 texts();
-if (S.game && S.game.G && !S.game.G.won) { G = S.game.G; tBase = S.game.t || 0; t0 = Date.now(); render(); startClock(); maybeAuto(); } else { S.plays = S.plays || 0; deal((Math.random() * 4294967296) >>> 0, false); }
+if (S.game && S.game.G && !S.game.G.won) { G = S.game.G; tBase = S.game.t || 0; undo = S.game.undo || []; t0 = Date.now(); render(); startClock(); maybeAuto(); } else { S.plays = S.plays || 0; deal((Math.random() * 4294967296) >>> 0, false); }
 window.SOL = { get G() { return G; }, S, deal, tapStock, tapCard, target, findHint, hash }; // debug hook for automated tests
 </script>
 </body>

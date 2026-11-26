@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0f3d2e">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone-192.png">
+<title>Compteur de points — Belote, Tarot, Yams, Rami</title>
+<style>
+:root{--vert:#0f3d2e;--vert2:#15523e;--tapis:#1b6b50;--or:#e8b64a;--creme:#fbf7ee;--carte:#ffffff;--txt:#1d2a24;--doux:#6b7a72;--ligne:#e6e0d2;--rouge:#c0392b;--bleu:#2f6fb0;--ombre:0 6px 20px rgba(15,61,46,.12)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+body{background:var(--creme);color:var(--txt);font-family:-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer}
+.app{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.entete{background:linear-gradient(160deg,var(--vert),var(--tapis));color:#fff;padding:max(14px,env(safe-area-inset-top)) 16px 18px;border-radius:0 0 24px 24px}
+.entete .l1{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:40px}
+.entete h1{font-size:1.25rem;font-weight:800}
+.entete p{opacity:.85;font-size:.88rem;margin-top:2px}
+.ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.12)}
+.ico svg{width:22px;height:22px}
+.corps{flex:1;padding:16px 14px calc(20px + env(safe-area-inset-bottom))}
+.jeux{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.jeu{background:var(--carte);border-radius:20px;padding:16px 14px;text-align:left;box-shadow:var(--ombre);border:1px solid var(--ligne)}
+.jeu .em{font-size:1.9rem}
+.jeu b{display:block;font-size:1.05rem;margin-top:6px}
+.jeu small{color:var(--doux);font-size:.8rem}
+h2{font-size:1.05rem;margin:22px 2px 10px}
+.carte{background:var(--carte);border-radius:18px;padding:14px;box-shadow:var(--ombre);border:1px solid var(--ligne)}
+.liste>*+*{margin-top:10px}
+.ligne-partie{display:flex;justify-content:space-between;align-items:center;gap:10px;text-align:left;width:100%}
+.ligne-partie small{color:var(--doux);display:block;font-size:.78rem}
+.tag{font-size:.72rem;font-weight:700;padding:4px 8px;border-radius:8px;background:#eef5f1;color:var(--vert2);white-space:nowrap}
+.btn{display:block;width:100%;padding:15px;border-radius:16px;font-weight:800;font-size:1rem;text-align:center;background:var(--carte);border:1px solid var(--ligne);box-shadow:var(--ombre)}
+.btn.vert{background:var(--vert2);color:#fff;border:0}
+.btn.or{background:var(--or);color:#2b1d00;border:0}
+.btn.petit{padding:10px;font-size:.9rem;box-shadow:none}
+.pile{display:grid;gap:10px}
+.deux{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+label{display:block;font-weight:700;font-size:.86rem;margin:14px 0 6px}
+input[type=text],input[type=number],select{width:100%;padding:13px;border-radius:12px;border:1px solid var(--ligne);background:#fff;font-size:16px}
+input:focus,select:focus{outline:2px solid var(--tapis);border-color:transparent}
+.choix{display:flex;flex-wrap:wrap;gap:8px}
+.choix button{padding:10px 14px;border-radius:12px;border:1.5px solid var(--ligne);background:#fff;font-weight:700;font-size:.92rem}
+.choix button.on{border-color:var(--tapis);background:#e6f2ec;color:var(--vert)}
+.joueurs-sel{display:flex;flex-wrap:wrap;gap:8px}
+.joueurs-sel button{padding:9px 12px;border-radius:999px;border:1.5px solid var(--ligne);background:#fff;font-weight:700;font-size:.9rem}
+.joueurs-sel button.on{background:var(--vert2);color:#fff;border-color:var(--vert2)}
+.scores{display:grid;gap:10px}
+.score{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-radius:16px;background:var(--carte);box-shadow:var(--ombre);border:1px solid var(--ligne)}
+.score b{font-size:1.05rem}
+.score .pts{font-size:1.7rem;font-weight:800;font-variant-numeric:tabular-nums}
+.score.tete{border-color:var(--or);background:linear-gradient(90deg,#fff8e6,#fff)}
+.score .pts.neg{color:var(--rouge)}
+.manches{width:100%;border-collapse:collapse;font-size:.88rem;font-variant-numeric:tabular-nums}
+.manches th,.manches td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--ligne)}
+.manches th:first-child,.manches td:first-child{text-align:left;color:var(--doux)}
+.manches th{font-size:.78rem;color:var(--doux)}
+.tableau-wrap{overflow-x:auto}
+.yams{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.yams th,.yams td{border:1px solid var(--ligne);padding:0;text-align:center;font-size:.9rem}
+.yams th{background:#f4efe3;padding:8px 4px;font-size:.78rem}
+.yams td:first-child{text-align:left;padding:8px;font-weight:600;background:#faf7f0;white-space:nowrap}
+.yams td button{width:100%;min-width:52px;min-height:40px;font-weight:700}
+.yams td button.vide{color:#c6c0b3}
+.yams tr.total td{font-weight:800;background:#eef5f1}
+.yams tr.bonus td{color:var(--doux);font-size:.8rem}
+.voile{position:fixed;inset:0;background:rgba(10,30,22,.5);display:flex;align-items:flex-end;justify-content:center;z-index:30}
+.feuille{width:100%;max-width:560px;max-height:92vh;overflow:auto;background:var(--creme);border-radius:22px 22px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+.feuille h3{font-size:1.15rem;margin-bottom:4px}
+.pave{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.pave button{padding:14px;border-radius:12px;background:#fff;border:1px solid var(--ligne);font-weight:800;font-size:1.1rem}
+.aide{font-size:.82rem;color:var(--doux);margin-top:6px}
+.regle{font-size:.88rem;line-height:1.55}
+.regle li{margin:4px 0 4px 18px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:var(--vert);color:#fff;padding:11px 16px;border-radius:12px;font-weight:700;z-index:60;max-width:90%;text-align:center}
+.pub{position:fixed;inset:0;z-index:50;background:#111;color:#fff;display:grid;place-items:center;text-align:center}
+.pub b{display:block;font-size:2.4rem;margin-top:8px}
+.vide{color:var(--doux);text-align:center;padding:16px;font-size:.9rem}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+(function () {
+"use strict";
+// ---------- Pont natif games-kit (identique iOS / Android) ----------
+var H = function (n) { return window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers[n]; };
+var natif = function (n, m) { var h = H(n); return h ? Promise.resolve(h.postMessage(m)).catch(function () { return false; }) : Promise.resolve(null); };
+var PID = "com.zvisionclub.compteurpoints.noads";
+
+// ---------- Sauvegarde ----------
+var CLE = "compteur_v1";
+var S = (function () { try { return JSON.parse(localStorage.getItem(CLE)) || {}; } catch (e) { return {}; } })();
+S.joueurs = S.joueurs || []; S.parties = S.parties || []; S.noads = !!S.noads; S.finies = S.finies || 0; S.derPub = S.derPub || 0;
+function sauver() { try { localStorage.setItem(CLE, JSON.stringify(S)); } catch (e) {} }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+function esc(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+var APP = document.getElementById("app");
+
+// ---------- Règles de calcul ----------
+var JEUX = {
+  belote: { nom: "Belote", em: "🂡", sous: "2 équipes · 162 pts par donne", min: 2, max: 2, equipes: true },
+  tarot: { nom: "Tarot", em: "🃏", sous: "3 à 5 joueurs · barème FFT", min: 3, max: 5 },
+  yams: { nom: "Yams", em: "🎲", sous: "Feuille de marque complète", min: 1, max: 8 },
+  rami: { nom: "Rami", em: "🂮", sous: "Pénalités · limite au choix", min: 2, max: 8 }
+};
+// Belote : la donne vaut 162 (dix de der compris), capot 252, Belote-Rebelote 20 pour l'équipe qui l'annonce.
+function calculBelote(m) {
+  var a = m.ptsPreneur, preneur = m.preneur, def = 1 - preneur, s = [0, 0];
+  if (m.capot) { s[m.capot - 1] = 252; }
+  else {
+    var pp = Math.max(0, Math.min(162, a)), pd = 162 - pp;
+    var bel = m.belote != null ? m.belote : -1;
+    var totPren = pp + (bel === preneur ? 20 : 0), totDef = pd + (bel === def ? 20 : 0);
+    if (totPren > totDef) { s[preneur] = pp; s[def] = pd; }
+    else { s[preneur] = 0; s[def] = 162; } // dedans : la défense marque tout
+  }
+  if (m.belote != null && m.belote >= 0) s[m.belote] += 20;
+  return s;
+}
+// Tarot (barème FFT) : points à faire selon les bouts, (25 + écart + petit au bout) × contrat, poignée et chelem en plus.
+var BESOIN = [56, 51, 41, 36], MULT = { petite: 1, garde: 2, sans: 4, contre: 6 }, POIGNEE = { 0: 0, 1: 20, 2: 30, 3: 40 };
+function calculTarot(m, n) {
+  var besoin = BESOIN[m.bouts], ecart = m.points - besoin, gagne = ecart >= 0, mult = MULT[m.contrat], signe = gagne ? 1 : -1;
+  var petit = m.petit === "att" ? 10 : (m.petit === "def" ? -10 : 0);
+  var chelem = { annonce: 400, nonannonce: 200, rate: -200 }[m.chelem] || 0;
+  // valeur pour UN défenseur, vue du preneur : (25 + écart) × contrat, petit au bout × contrat, poignée au camp gagnant, chelem
+  var v = signe * (25 + Math.abs(ecart)) * mult + petit * mult + signe * POIGNEE[m.poignee || 0] + chelem;
+  var s = new Array(n).fill(0), pren = m.preneur, part = m.partenaire;
+  if (n === 5 && part != null && part !== pren) {
+    for (var i = 0; i < n; i++) s[i] = -v;
+    s[pren] = 2 * v; s[part] = v;
+  } else {
+    for (var j = 0; j < n; j++) s[j] = -v;
+    s[pren] = (n - 1) * v;
+  }
+  return s;
+}
+// Yams : section haute (bonus 35 si 63 ou plus), section basse.
+var YAMS = [
+  { k: "1", n: "As (1)", haut: true, max: 5, pas: 1 }, { k: "2", n: "Deux", haut: true, max: 10, pas: 2 }, { k: "3", n: "Trois", haut: true, max: 15, pas: 3 },
+  { k: "4", n: "Quatre", haut: true, max: 20, pas: 4 }, { k: "5", n: "Cinq", haut: true, max: 25, pas: 5 }, { k: "6", n: "Six", haut: true, max: 30, pas: 6 },
+  { k: "brelan", n: "Brelan", somme: true }, { k: "carre", n: "Carré", somme: true }, { k: "full", n: "Full", fixe: 25 },
+  { k: "petite", n: "Petite suite", fixe: 30 }, { k: "grande", n: "Grande suite", fixe: 40 }, { k: "yams", n: "Yams", fixe: 50 }, { k: "chance", n: "Chance", somme: true }
+];
+function totauxYams(f) {
+  var haut = 0, bas = 0;
+  YAMS.forEach(function (c) { var v = f[c.k]; if (typeof v === "number") { if (c.haut) haut += v; else bas += v; } });
+  var bonus = haut >= 63 ? 35 : 0;
+  return { haut: haut, bonus: bonus, bas: bas, total: haut + bonus + bas };
+}
+
+// ---------- Totaux d'une partie ----------
+function totaux(p) {
+  if (p.jeu === "yams") return p.feuilles.map(function (f) { return totauxYams(f).total; });
+  var t = new Array(p.noms.length).fill(0);
+  p.manches.forEach(function (m) { m.s.forEach(function (v, i) { t[i] += v; }); });
+  return t;
+}
+function gagnant(p) {
+  var t = totaux(p);
+  if (p.jeu === "rami") { var min = Math.min.apply(null, t); return t.indexOf(min); }
+  var max = Math.max.apply(null, t); return t.indexOf(max);
+}
+function partieFinie(p) {
+  var t = totaux(p);
+  if (p.jeu === "belote") return t.some(function (v) { return v >= p.cible; });
+  if (p.jeu === "rami") return t.some(function (v) { return v >= p.cible; });
+  if (p.jeu === "yams") return p.feuilles.every(function (f) { return YAMS.every(function (c) { return typeof f[c.k] === "number"; }); });
+  return false;
+}
+
+// ---------- Accueil ----------
+function accueil() {
+  var enCours = S.parties.filter(function (p) { return !p.fin; });
+  var h = '<div class="entete"><div class="l1"><div><h1>Compteur de points</h1><p>Belote · Tarot · Yams · Rami</p></div><button class="ico" data-reg aria-label="Réglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v3M12 20v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M1 12h3M20 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button></div></div>';
+  h += '<div class="corps"><div class="jeux">' + Object.keys(JEUX).map(function (k) { var j = JEUX[k]; return '<button class="jeu" data-jeu="' + k + '"><span class="em">' + j.em + "</span><b>" + j.nom + "</b><small>" + j.sous + "</small></button>"; }).join("") + "</div>";
+  if (enCours.length) h += "<h2>Parties en cours</h2><div class=\"liste\">" + enCours.map(lignePartie).join("") + "</div>";
+  var finies = S.parties.filter(function (p) { return p.fin; }).slice(-20).reverse();
+  h += "<h2>Historique</h2>" + (finies.length ? '<div class="liste">' + finies.map(lignePartie).join("") + "</div>" : '<div class="carte vide">Tes parties terminées apparaîtront ici.</div>');
+  h += '<h2>Joueurs</h2><div class="carte">' + (S.joueurs.length ? '<div class="joueurs-sel">' + S.joueurs.map(function (j) { return "<button>" + esc(j) + "</button>"; }).join("") + "</div>" : '<p class="vide" style="padding:4px">Les joueurs que tu ajoutes sont retenus pour les prochaines parties.</p>') + "</div>";
+  h += '<h2>Règles de calcul</h2><div class="deux">' + Object.keys(JEUX).map(function (k) { return '<button class="btn petit" data-regle="' + k + '">' + JEUX[k].em + " " + JEUX[k].nom + "</button>"; }).join("") + "</div></div>";
+  APP.innerHTML = h;
+  APP.querySelectorAll("[data-jeu]").forEach(function (b) { b.onclick = function () { configurer(b.dataset.jeu); }; });
+  APP.querySelectorAll("[data-partie]").forEach(function (b) { b.onclick = function () { ouvrir(b.dataset.partie); }; });
+  APP.querySelectorAll("[data-regle]").forEach(function (b) { b.onclick = function () { regles(b.dataset.regle); }; });
+  APP.querySelector("[data-reg]").onclick = reglages;
+}
+function lignePartie(p) {
+  var t = totaux(p), g = gagnant(p), d = new Date(p.date);
+  return '<button class="carte ligne-partie" data-partie="' + p.id + '"><span><b>' + JEUX[p.jeu].em + " " + JEUX[p.jeu].nom + "</b><small>" + p.noms.map(function (n, i) { return esc(n) + " " + t[i]; }).join(" · ") + "</small><small>" + d.toLocaleDateString("fr-FR") + "</small></span>" +
+    '<span class="tag">' + (p.fin ? "🏆 " + esc(p.noms[g]) : "En cours") + "</span></button>";
+}
+
+// ---------- Nouvelle partie ----------
+function configurer(jeu) {
+  var J = JEUX[jeu], choisis = [], equipes = ["Nous", "Eux"], cible = jeu === "belote" ? 1000 : (jeu === "rami" ? 100 : 0);
+  function dessiner() {
+    var h = '<div class="entete"><div class="l1"><button class="ico" data-retour>‹</button><div style="flex:1"><h1>' + J.em + " " + J.nom + "</h1><p>Nouvelle partie</p></div></div></div><div class=\"corps\">";
+    if (J.equipes) {
+      h += '<label>Équipe 1</label><input type="text" data-eq="0" value="' + esc(equipes[0]) + '" maxlength="20"><label>Équipe 2</label><input type="text" data-eq="1" value="' + esc(equipes[1]) + '" maxlength="20">';
+      h += '<label>Partie en</label><div class="choix">' + [501, 1000, 1500, 2000].map(function (v) { return '<button data-cible="' + v + '"' + (v === cible ? ' class="on"' : "") + ">" + v + " pts</button>"; }).join("") + "</div>";
+    } else {
+      h += "<label>Joueurs (" + J.min + " à " + J.max + ")</label>";
+      h += '<div class="joueurs-sel">' + S.joueurs.map(function (j) { return '<button data-j="' + esc(j) + '"' + (choisis.indexOf(j) >= 0 ? ' class="on"' : "") + ">" + (choisis.indexOf(j) >= 0 ? choisis.indexOf(j) + 1 + ". " : "") + esc(j) + "</button>"; }).join("") + "</div>";
+      h += '<div class="deux" style="margin-top:10px;grid-template-columns:1fr auto"><input type="text" data-nouveau placeholder="Ajouter un joueur" maxlength="16"><button class="btn petit vert" data-ajouter style="width:auto;padding:0 18px">+</button></div>';
+      if (jeu === "rami") h += '<label>Perdant quand il atteint</label><div class="choix">' + [100, 200, 300, 500].map(function (v) { return '<button data-cible="' + v + '"' + (v === cible ? ' class="on"' : "") + ">" + v + " pts</button>"; }).join("") + "</div>";
+    }
+    var ok = J.equipes || (choisis.length >= J.min && choisis.length <= J.max);
+    h += '<div style="margin-top:22px"><button class="btn vert" data-go' + (ok ? "" : " disabled style=\"opacity:.45\"") + ">Commencer</button></div></div>";
+    APP.innerHTML = h;
+    APP.querySelector("[data-retour]").onclick = accueil;
+    APP.querySelectorAll("[data-eq]").forEach(function (i) { i.oninput = function () { equipes[+i.dataset.eq] = i.value; }; });
+    APP.querySelectorAll("[data-cible]").forEach(function (b) { b.onclick = function () { cible = +b.dataset.cible; dessiner(); }; });
+    APP.querySelectorAll("[data-j]").forEach(function (b) { b.onclick = function () { var n = b.dataset.j, k = choisis.indexOf(n); if (k >= 0) choisis.splice(k, 1); else if (choisis.length < J.max) choisis.push(n); dessiner(); }; });
+    var add = APP.querySelector("[data-ajouter]");
+    if (add) {
+      var champ = APP.querySelector("[data-nouveau]");
+      var ajouter = function () { var n = champ.value.trim(); if (!n) return; if (S.joueurs.indexOf(n) < 0) { S.joueurs.push(n); sauver(); } if (choisis.indexOf(n) < 0 && choisis.length < J.max) choisis.push(n); dessiner(); };
+      add.onclick = ajouter; champ.onkeydown = function (e) { if (e.key === "Enter") ajouter(); };
+    }
+    APP.querySelector("[data-go]").onclick = function () {
+      if (!ok) return;
+      var noms = J.equipes ? equipes.map(function (e, i) { return e.trim() || "Équipe " + (i + 1); }) : choisis.slice();
+      var p = { id: uid(), jeu: jeu, noms: noms, date: Date.now(), manches: [], cible: cible, fin: false };
+      if (jeu === "yams") p.feuilles = noms.map(function () { return {}; });
+      S.parties.push(p); sauver(); ouvrir(p.id);
+    };
+  }
+  dessiner();
+}
+
+// ---------- Partie ----------
+function ouvrir(id) {
+  var p = S.parties.filter(function (x) { return x.id === id; })[0]; if (!p) return accueil();
+  if (p.jeu === "yams") return feuilleYams(p);
+  var t = totaux(p), g = gagnant(p);
+  var h = '<div class="entete"><div class="l1"><button class="ico" data-retour>‹</button><div style="flex:1"><h1>' + JEUX[p.jeu].em + " " + JEUX[p.jeu].nom + "</h1><p>" + (p.cible ? "Partie en " + p.cible + " pts · " : "") + p.manches.length + " manche(s)</p></div></div></div><div class=\"corps\">";
+  h += '<div class="scores">' + p.noms.map(function (n, i) { return '<div class="score' + (p.manches.length && i === g ? " tete" : "") + '"><b>' + (p.manches.length && i === g ? "👑 " : "") + esc(n) + '</b><span class="pts' + (t[i] < 0 ? " neg" : "") + '">' + t[i] + "</span></div>"; }).join("") + "</div>";
+  if (p.fin) h += '<div class="carte" style="margin-top:14px;text-align:center"><b>🏆 ' + esc(p.noms[g]) + " gagne la partie</b></div>";
+  else h += '<div style="margin-top:14px"><button class="btn vert" data-manche>+ Nouvelle manche</button></div>';
+  if (p.manches.length) {
+    h += '<h2>Manches</h2><div class="carte tableau-wrap"><table class="manches"><tr><th>#</th>' + p.noms.map(function (n) { return "<th>" + esc(n) + "</th>"; }).join("") + "<th></th></tr>" +
+      p.manches.map(function (m, k) { return "<tr><td>" + (k + 1) + (m.info ? " · " + esc(m.info) : "") + "</td>" + m.s.map(function (v) { return "<td>" + (v > 0 && p.jeu === "tarot" ? "+" : "") + v + "</td>"; }).join("") + '<td><button data-suppr="' + k + '" aria-label="Supprimer la manche">✕</button></td></tr>'; }).join("") + "</table></div>";
+  }
+  h += '<div class="deux" style="margin-top:16px">' + (p.fin ? '<button class="btn" data-rouvrir>Reprendre</button>' : '<button class="btn" data-terminer>Terminer la partie</button>') + '<button class="btn" data-supprimer style="color:var(--rouge)">Supprimer</button></div></div>';
+  APP.innerHTML = h;
+  APP.querySelector("[data-retour]").onclick = accueil;
+  var mb = APP.querySelector("[data-manche]"); if (mb) mb.onclick = function () { saisieManche(p); };
+  APP.querySelectorAll("[data-suppr]").forEach(function (b) { b.onclick = function () { if (confirm("Supprimer la manche " + (+b.dataset.suppr + 1) + " ?")) { p.manches.splice(+b.dataset.suppr, 1); p.fin = false; sauver(); ouvrir(p.id); } }; });
+  var te = APP.querySelector("[data-terminer]"); if (te) te.onclick = function () { terminer(p); };
+  var ro = APP.querySelector("[data-rouvrir]"); if (ro) ro.onclick = function () { p.fin = false; sauver(); ouvrir(p.id); };
+  APP.querySelector("[data-supprimer]").onclick = function () { if (confirm("Supprimer cette partie ?")) { S.parties = S.parties.filter(function (x) { return x.id !== p.id; }); sauver(); accueil(); } };
+}
+function terminer(p) {
+  p.fin = true; S.finies++; sauver();
+  toast("🏆 " + p.noms[gagnant(p)] + " gagne !");
+  interstitiel().then(function () { ouvrir(p.id); });
+}
+function ajouterManche(p, m) {
+  p.manches.push(m); sauver();
+  if (partieFinie(p)) terminer(p); else ouvrir(p.id);
+}
+
+// ---------- Saisie rapide d'une manche ----------
+function feuille(html, lier) {
+  var v = document.createElement("div"); v.className = "voile";
+  v.innerHTML = '<div class="feuille">' + html + "</div>";
+  v.onclick = function (e) { if (e.target === v) v.remove(); };
+  document.body.appendChild(v); lier(v); return v;
+}
+function saisieManche(p) {
+  if (p.jeu === "belote") return mancheBelote(p);
+  if (p.jeu === "tarot") return mancheTarot(p);
+  return mancheRami(p);
+}
+function mancheBelote(p) {
+  var m = { preneur: 0, ptsPreneur: "", belote: null, capot: 0 };
+  function rendu() {
+    v.querySelector(".feuille").innerHTML = "<h3>Manche " + (p.manches.length + 1) + "</h3>" +
+      '<label>Qui a pris ?</label><div class="choix">' + p.noms.map(function (n, i) { return '<button data-pr="' + i + '"' + (m.preneur === i ? ' class="on"' : "") + ">" + esc(n) + "</button>"; }).join("") + "</div>" +
+      '<label>Points faits par ' + esc(p.noms[m.preneur]) + ' (sur 162)</label><input type="number" inputmode="numeric" min="0" max="162" data-pts value="' + m.ptsPreneur + '" placeholder="ex. 94"' + (m.capot ? " disabled" : "") + ">" +
+      '<p class="aide">L’autre équipe a automatiquement 162 − ce nombre. Si le preneur fait moins que la défense, il est « dedans » : la défense marque 162.</p>' +
+      '<label>Belote-Rebelote</label><div class="choix"><button data-bel="-1"' + (m.belote == null ? ' class="on"' : "") + ">Personne</button>" + p.noms.map(function (n, i) { return '<button data-bel="' + i + '"' + (m.belote === i ? ' class="on"' : "") + ">" + esc(n) + "</button>"; }).join("") + "</div>" +
+      '<label>Capot (tous les plis, 252 pts)</label><div class="choix"><button data-cap="0"' + (!m.capot ? ' class="on"' : "") + ">Non</button>" + p.noms.map(function (n, i) { return '<button data-cap="' + (i + 1) + '"' + (m.capot === i + 1 ? ' class="on"' : "") + ">" + esc(n) + "</button>"; }).join("") + "</div>" +
+      '<div data-apercu></div>' +
+      '<div class="deux" style="margin-top:14px"><button class="btn" data-annul>Annuler</button><button class="btn vert" data-ok>Valider</button></div>';
+    lier(); majApercu();
+  }
+  function calculer() {
+    if (m.capot) { var c = m.capot === 1 ? [252, 0] : [0, 252]; if (m.belote != null) c[m.belote] += 20; return c; }
+    return m.ptsPreneur !== "" ? calculBelote({ preneur: m.preneur, ptsPreneur: +m.ptsPreneur, belote: m.belote }) : null;
+  }
+  function majApercu() {
+    var ap = calculer(), z = v.querySelector("[data-apercu]"), ok = v.querySelector("[data-ok]");
+    z.innerHTML = ap ? '<div class="carte" style="margin-top:14px"><b>Cette manche :</b> ' + p.noms.map(function (n, i) { return esc(n) + " +" + ap[i]; }).join(" · ") + "</div>" : "";
+    ok.style.opacity = ap ? "1" : ".45";
+  }
+  function lier() {
+    var f = v.querySelector(".feuille");
+    f.querySelectorAll("[data-pr]").forEach(function (b) { b.onclick = function () { m.preneur = +b.dataset.pr; rendu(); }; });
+    var pts = f.querySelector("[data-pts]"); pts.oninput = function () { m.ptsPreneur = pts.value === "" ? "" : Math.max(0, Math.min(162, +pts.value)); majApercu(); };
+    f.querySelectorAll("[data-bel]").forEach(function (b) { b.onclick = function () { var x = +b.dataset.bel; m.belote = x < 0 ? null : x; rendu(); }; });
+    f.querySelectorAll("[data-cap]").forEach(function (b) { b.onclick = function () { m.capot = +b.dataset.cap; rendu(); }; });
+    f.querySelector("[data-annul]").onclick = function () { v.remove(); };
+    f.querySelector("[data-ok]").onclick = function () {
+      var s = calculer(); if (!s) return;
+      v.remove(); ajouterManche(p, { s: s, info: p.noms[m.preneur].slice(0, 6) + (m.capot ? " capot" : (s[m.preneur] === 0 ? " dedans" : "")) });
+    };
+  }
+  var v = feuille("", function () {}); rendu();
+}
+function mancheTarot(p) {
+  var n = p.noms.length, m = { preneur: 0, partenaire: n === 5 ? 1 : null, contrat: "garde", bouts: 1, points: "", petit: 0, poignee: 0, chelem: 0 };
+  var v = feuille("", function () {});
+  function choix(cle, opts) { return '<div class="choix">' + opts.map(function (o) { return '<button data-c="' + cle + '" data-v="' + o[0] + '"' + (String(m[cle]) === String(o[0]) ? ' class="on"' : "") + ">" + o[1] + "</button>"; }).join("") + "</div>"; }
+  function rendu() {
+    var ok = m.points !== "";
+    var apercu = ok ? calculTarot({ preneur: m.preneur, partenaire: m.partenaire, contrat: m.contrat, bouts: m.bouts, points: +m.points, petit: m.petit, poignee: m.poignee, chelem: m.chelem }, n) : null;
+    var f = v.querySelector(".feuille");
+    f.innerHTML = "<h3>Donne " + (p.manches.length + 1) + "</h3>" +
+      "<label>Preneur</label>" + choix("preneur", p.noms.map(function (x, i) { return [i, esc(x)]; })) +
+      (n === 5 ? "<label>Appelé (partenaire)</label>" + choix("partenaire", p.noms.map(function (x, i) { return [i, esc(x)]; })) + '<p class="aide">S’il s’est appelé lui-même, choisis le preneur.</p>' : "") +
+      "<label>Contrat</label>" + choix("contrat", [["petite", "Petite ×1"], ["garde", "Garde ×2"], ["sans", "Garde sans ×4"], ["contre", "Garde contre ×6"]]) +
+      "<label>Bouts du preneur</label>" + choix("bouts", [[0, "0 (56)"], [1, "1 (51)"], [2, "2 (41)"], [3, "3 (36)"]]) +
+      '<label>Points faits par le preneur (sur 91)</label><input type="number" inputmode="decimal" step="0.5" min="0" max="91" data-pts value="' + m.points + '" placeholder="ex. 54">' +
+      "<label>Petit au bout</label>" + choix("petit", [[0, "Non"], ["att", "Attaque"], ["def", "Défense"]]) +
+      "<label>Poignée</label>" + choix("poignee", [[0, "Non"], [1, "Simple 20"], [2, "Double 30"], [3, "Triple 40"]]) +
+      "<label>Chelem</label>" + choix("chelem", [[0, "Non"], ["annonce", "Annoncé réussi +400"], ["nonannonce", "Non annoncé +200"], ["rate", "Annoncé raté −200"]]) +
+      (apercu ? '<div class="carte" style="margin-top:14px"><b>' + (+m.points >= BESOIN[m.bouts] ? "✅ Fait" : "❌ Chuté") + "</b> · " + p.noms.map(function (x, i) { return esc(x) + " " + (apercu[i] > 0 ? "+" : "") + apercu[i]; }).join(" · ") + "</div>" : "") +
+      '<div class="deux" style="margin-top:14px"><button class="btn" data-annul>Annuler</button><button class="btn vert" data-ok' + (ok ? "" : ' disabled style="opacity:.45"') + ">Valider</button></div>";
+    f.querySelectorAll("[data-c]").forEach(function (b) { b.onclick = function () { var c = b.dataset.c, val = b.dataset.v; m[c] = /^\d+$/.test(val) ? +val : val; rendu(); }; });
+    var pts = f.querySelector("[data-pts]"); pts.onchange = function () { m.points = pts.value === "" ? "" : Math.max(0, Math.min(91, +pts.value)); rendu(); };
+    pts.onkeyup = function (e) { if (e.key === "Enter") pts.onchange(); };
+    f.querySelector("[data-annul]").onclick = function () { v.remove(); };
+    f.querySelector("[data-ok]").onclick = function () { if (!apercu) return; v.remove(); ajouterManche(p, { s: apercu, info: { petite: "P", garde: "G", sans: "GS", contre: "GC" }[m.contrat] + " " + p.noms[m.preneur].slice(0, 5) }); };
+  }
+  rendu();
+}
+function mancheRami(p) {
+  var vals = p.noms.map(function () { return ""; });
+  var v = feuille("", function () {});
+  function rendu() {
+    var f = v.querySelector(".feuille");
+    f.innerHTML = "<h3>Manche " + (p.manches.length + 1) + '</h3><p class="aide">Saisis les points de pénalité de chacun (0 pour celui qui a fini).</p>' +
+      p.noms.map(function (n, i) { return "<label>" + esc(n) + '</label><input type="number" inputmode="numeric" data-i="' + i + '" value="' + vals[i] + '" placeholder="0">'; }).join("") +
+      '<div class="deux" style="margin-top:14px"><button class="btn" data-annul>Annuler</button><button class="btn vert" data-ok>Valider</button></div>';
+    f.querySelectorAll("[data-i]").forEach(function (inp) { inp.oninput = function () { vals[+inp.dataset.i] = inp.value; }; });
+    f.querySelector("[data-annul]").onclick = function () { v.remove(); };
+    f.querySelector("[data-ok]").onclick = function () { v.remove(); ajouterManche(p, { s: vals.map(function (x) { return Math.round(+x || 0); }) }); };
+    var premier = f.querySelector("[data-i]"); if (premier) premier.focus();
+  }
+  rendu();
+}
+
+// ---------- Yams ----------
+function feuilleYams(p) {
+  var h = '<div class="entete"><div class="l1"><button class="ico" data-retour>‹</button><div style="flex:1"><h1>🎲 Yams</h1><p>Touche une case pour la remplir</p></div></div></div><div class="corps"><div class="carte tableau-wrap" style="padding:0"><table class="yams"><tr><th></th>' + p.noms.map(function (n) { return "<th>" + esc(n) + "</th>"; }).join("") + "</tr>";
+  YAMS.forEach(function (c, k) {
+    h += "<tr><td>" + c.n + "</td>" + p.feuilles.map(function (f, i) { var v = f[c.k]; return '<td><button class="' + (typeof v === "number" ? "" : "vide") + '" data-y="' + i + ":" + c.k + '">' + (typeof v === "number" ? v : "·") + "</button></td>"; }).join("") + "</tr>";
+    if (c.k === "6") {
+      h += '<tr class="bonus"><td>Bonus (63+)</td>' + p.feuilles.map(function (f) { var t = totauxYams(f); return "<td>" + (t.bonus ? "+35" : t.haut + "/63") + "</td>"; }).join("") + "</tr>";
+    }
+  });
+  h += '<tr class="total"><td>Total</td>' + p.feuilles.map(function (f) { return "<td>" + totauxYams(f).total + "</td>"; }).join("") + "</tr></table></div>";
+  h += p.fin ? '<div class="carte" style="margin-top:14px;text-align:center"><b>🏆 ' + esc(p.noms[gagnant(p)]) + " gagne</b></div>" : "";
+  h += '<div class="deux" style="margin-top:16px">' + (p.fin ? '<button class="btn" data-rouvrir>Reprendre</button>' : '<button class="btn" data-terminer>Terminer</button>') + '<button class="btn" data-supprimer style="color:var(--rouge)">Supprimer</button></div></div>';
+  APP.innerHTML = h;
+  APP.querySelector("[data-retour]").onclick = accueil;
+  APP.querySelectorAll("[data-y]").forEach(function (b) { b.onclick = function () { var x = b.dataset.y.split(":"); caseYams(p, +x[0], x[1]); }; });
+  var te = APP.querySelector("[data-terminer]"); if (te) te.onclick = function () { terminer(p); };
+  var ro = APP.querySelector("[data-rouvrir]"); if (ro) ro.onclick = function () { p.fin = false; sauver(); feuilleYams(p); };
+  APP.querySelector("[data-supprimer]").onclick = function () { if (confirm("Supprimer cette partie ?")) { S.parties = S.parties.filter(function (x) { return x.id !== p.id; }); sauver(); accueil(); } };
+}
+function caseYams(p, i, k) {
+  var c = YAMS.filter(function (x) { return x.k === k; })[0], f = p.feuilles[i];
+  var options = [];
+  if (c.haut) for (var n = 0; n <= 5; n++) options.push([n * c.pas, n + " × " + c.k]);
+  else if (c.fixe) options = [[c.fixe, c.fixe + " pts"], [0, "Barré (0)"]];
+  var h = "<h3>" + esc(p.noms[i]) + " · " + c.n + "</h3>" + (c.somme ? '<p class="aide">Somme des 5 dés (5 à 30). 0 pour barrer.</p><input type="number" inputmode="numeric" min="0" max="30" data-som placeholder="Somme des dés"><div class="pave">' + [0, 5, 10, 15, 20, 25, 30].map(function (x) { return '<button data-v="' + x + '">' + x + "</button>"; }).join("") + "</div>" : '<div class="pave">' + options.map(function (o) { return '<button data-v="' + o[0] + '">' + o[1] + "</button>"; }).join("") + "</div>") +
+    '<div class="deux" style="margin-top:14px"><button class="btn" data-effacer>Vider la case</button>' + (c.somme ? '<button class="btn vert" data-ok>Valider</button>' : '<button class="btn" data-annul>Annuler</button>') + "</div>";
+  feuille(h, function (v) {
+    var fixer = function (val) { f[k] = val; v.remove(); sauver(); if (partieFinie(p) && !p.fin) terminer(p); else feuilleYams(p); };
+    v.querySelectorAll("[data-v]").forEach(function (b) { b.onclick = function () { if (c.somme) v.querySelector("[data-som]").value = b.dataset.v; else fixer(+b.dataset.v); }; });
+    var ok = v.querySelector("[data-ok]"); if (ok) ok.onclick = function () { var x = v.querySelector("[data-som]").value; if (x === "") return; fixer(Math.max(0, Math.min(30, Math.round(+x)))); };
+    var an = v.querySelector("[data-annul]"); if (an) an.onclick = function () { v.remove(); };
+    v.querySelector("[data-effacer]").onclick = function () { delete f[k]; v.remove(); sauver(); feuilleYams(p); };
+    var som = v.querySelector("[data-som]"); if (som) som.focus();
+  });
+}
+
+// ---------- Règles ----------
+function regles(jeu) {
+  var R = {
+    belote: "<ul><li>Chaque donne rapporte 162 points (dix de der compris).</li><li>Le preneur doit faire plus de points que la défense, sinon il est « dedans » : la défense marque 162.</li><li>Belote-Rebelote (roi + dame d’atout) : +20 pour l’équipe qui l’annonce, même dedans.</li><li>Capot (tous les plis) : 252 points.</li><li>La partie se joue en 501, 1000, 1500 ou 2000 points.</li></ul>",
+    tarot: "<ul><li>Points à faire selon les bouts : 0 bout = 56, 1 = 51, 2 = 41, 3 = 36.</li><li>Score = (25 + écart) × contrat : Petite ×1, Garde ×2, Garde sans ×4, Garde contre ×6.</li><li>Petit au bout : ±10 × contrat. Poignée : 20, 30 ou 40 pour le camp gagnant. Chelem : +400 annoncé, +200 non annoncé, −200 raté.</li><li>À 3 ou 4 joueurs, le preneur marque le score × (joueurs − 1), chaque défenseur le perd. À 5 : preneur ×2, appelé ×1.</li><li>La somme des scores de chaque donne fait toujours 0.</li></ul>",
+    yams: "<ul><li>Haut : total des dés de la valeur (as à six). Bonus de 35 si le total du haut atteint 63.</li><li>Brelan, carré et chance : somme des 5 dés.</li><li>Full 25, petite suite 30, grande suite 40, Yams 50.</li><li>Une case barrée vaut 0. Le plus gros total gagne.</li></ul>",
+    rami: "<ul><li>À chaque manche, chacun compte les points des cartes qui lui restent en main (0 pour celui qui a fini).</li><li>Les points s’additionnent : le joueur qui atteint la limite choisie (100, 200, 300 ou 500) a perdu.</li><li>Le joueur avec le moins de points gagne.</li></ul>"
+  }[jeu];
+  feuille("<h3>" + JEUX[jeu].em + " Règles de calcul — " + JEUX[jeu].nom + '</h3><div class="regle">' + R + '</div><button class="btn" style="margin-top:14px" data-fermer>Fermer</button>', function (v) { v.querySelector("[data-fermer]").onclick = function () { v.remove(); }; });
+}
+
+// ---------- Pub discrète et « Sans pub » ----------
+function pubTest() { return new Promise(function (res) { var el = document.createElement("div"); el.className = "pub"; el.innerHTML = "<div>Publicité (test)<b>3</b></div>"; document.body.appendChild(el); var n = 3; var iv = setInterval(function () { n--; el.querySelector("b").textContent = n > 0 ? n : "✓"; if (n <= 0) { clearInterval(iv); setTimeout(function () { el.remove(); res(true); }, 300); } }, 1000); }); }
+// Une seule pub, en fin de partie, à partir de la 2e partie terminée et au plus toutes les 5 minutes. Jamais pendant la saisie.
+function interstitiel() {
+  if (S.noads || S.finies < 2 || Date.now() - S.derPub < 300000) return Promise.resolve();
+  S.derPub = Date.now(); sauver();
+  return H("ads") ? natif("ads", { op: "interstitial" }) : pubTest();
+}
+function reglages() {
+  feuille("<h3>Réglages</h3>" +
+    '<div class="carte" style="margin-top:10px"><b>Sans pub</b><p class="aide">Retire la petite pub de fin de partie, pour toujours.</p>' + (S.noads ? '<p style="margin-top:8px;font-weight:700;color:var(--vert2)">✓ Activé, merci !</p>' : '<button class="btn or" style="margin-top:10px" data-acheter>Acheter « Sans pub »</button>') + "</div>" +
+    '<div class="pile" style="margin-top:12px"><button class="btn" data-restaurer>Restaurer mes achats</button>' + (H("ads") ? '<button class="btn" data-consent>Choix publicitaires</button>' : "") +
+    '<button class="btn" data-joueurs>Effacer la liste des joueurs</button><button class="btn" data-fermer>Fermer</button></div><p class="aide" style="text-align:center;margin-top:10px">Tes parties restent sur ton téléphone.</p>', function (v) {
+    var a = v.querySelector("[data-acheter]"); if (a) a.onclick = function () {
+      if (!H("store")) { S.noads = true; sauver(); toast("Merci ! (achat test)"); v.remove(); return; }
+      natif("store", { op: "buy", id: PID }).then(function (r) { if (r) { S.noads = true; sauver(); toast("Merci ! Plus de pub."); } v.remove(); });
+    };
+    v.querySelector("[data-restaurer]").onclick = function () { natif("store", { op: "restore" }).then(function (l) { if (Array.isArray(l) && l.indexOf(PID) >= 0) { S.noads = true; sauver(); } toast("Achats restaurés"); v.remove(); }); };
+    var c = v.querySelector("[data-consent]"); if (c) c.onclick = function () { natif("ads", { op: "consentForm" }); };
+    v.querySelector("[data-joueurs]").onclick = function () { if (confirm("Effacer tous les joueurs enregistrés ?")) { S.joueurs = []; sauver(); v.remove(); accueil(); } };
+    v.querySelector("[data-fermer]").onclick = function () { v.remove(); };
+  });
+}
+window.nativeStoreUpdate = function (pid) { if (pid === PID) { S.noads = true; sauver(); } };
+if (H("ads")) natif("ads", { op: "init" });
+if (H("store")) natif("store", { op: "owned" }).then(function (l) { if (Array.isArray(l) && l.indexOf(PID) >= 0) { S.noads = true; sauver(); } });
+function toast(t) { var el = document.createElement("div"); el.className = "toast"; el.textContent = t; document.body.appendChild(el); setTimeout(function () { el.remove(); }, 2400); }
+
+window.COMPTEUR = { calculBelote: calculBelote, calculTarot: calculTarot, totauxYams: totauxYams };
+accueil();
+})();
+</script>
+<script>if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>

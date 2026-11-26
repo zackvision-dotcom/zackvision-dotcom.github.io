@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f4f1ea">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone-192.png">
+<title>Sudoku Zen</title>
+<style>
+:root{--bg:#f4f1ea;--grille:#fffdf8;--txt:#2f3a35;--doux:#7b857f;--ligne:#cfd6cf;--fort:#55645b;--acc:#6f9a83;--acc-cl:#dfeee5;--meme:#e9f1ec;--sel:#c9e2d4;--erreur:#c8553d;--saisi:#3f6f8f;--carte:#fffdf8;--ombre:0 8px 24px rgba(47,58,53,.08)}
+body.sombre{--bg:#16201c;--grille:#1d2924;--txt:#e6efe9;--doux:#93a39a;--ligne:#33443c;--fort:#7d968a;--acc:#8fc1a5;--acc-cl:#24352d;--meme:#22322b;--sel:#2f4a3d;--erreur:#ff8a73;--saisi:#9cc8e6;--carte:#1d2924;--ombre:0 8px 24px rgba(0,0,0,.35)}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;transition:background .3s}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.app{max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding:max(12px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom))}
+.haut{display:flex;align-items:center;justify-content:space-between;gap:8px;height:48px}
+.titre{font-weight:700;font-size:1.15rem;letter-spacing:.02em}
+.titre small{display:block;font-size:.72rem;font-weight:600;color:var(--doux);letter-spacing:.06em;text-transform:uppercase}
+.ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;color:var(--fort)}
+.ico svg{width:24px;height:24px}
+.infos{display:flex;justify-content:space-between;color:var(--doux);font-size:.88rem;font-weight:600;margin:6px 2px 10px}
+.grille{display:grid;grid-template-columns:repeat(9,1fr);background:var(--grille);border:2px solid var(--fort);border-radius:10px;overflow:hidden;box-shadow:var(--ombre);aspect-ratio:1;width:100%}
+.case{position:relative;display:grid;place-items:center;border-right:1px solid var(--ligne);border-bottom:1px solid var(--ligne);font-size:min(7vw,30px);font-weight:500;color:var(--saisi);transition:background .12s}
+.case.donne{color:var(--txt);font-weight:700}
+.case:nth-child(9n){border-right:0}
+.case:nth-child(9n+3),.case:nth-child(9n+6){border-right:2px solid var(--fort)}
+.case:nth-child(n+19):nth-child(-n+27),.case:nth-child(n+46):nth-child(-n+54){border-bottom:2px solid var(--fort)}
+.case:nth-child(n+73){border-bottom:0}
+.case.zone{background:var(--meme)}
+.case.pareil{background:var(--acc-cl)}
+.case.sel{background:var(--sel)}
+.case.faux{color:var(--erreur)}
+.case.indice{animation:pulse .6s}
+@keyframes pulse{50%{transform:scale(1.15)}}
+.notes{position:absolute;inset:2px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);font-size:min(2.6vw,11px);color:var(--doux);font-weight:600}
+.notes span{display:grid;place-items:center}
+.outils{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 10px}
+.outil{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;border-radius:12px;color:var(--fort);font-size:.74rem;font-weight:600;position:relative}
+.outil svg{width:26px;height:26px}
+.outil.on{color:var(--acc);background:var(--acc-cl)}
+.outil .pastille{position:absolute;top:0;right:18%;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--acc);color:#fff;font-size:.68rem;display:grid;place-items:center}
+.pave{display:grid;grid-template-columns:repeat(9,1fr);gap:5px}
+.pave button{aspect-ratio:.8;border-radius:12px;background:var(--carte);box-shadow:var(--ombre);font-size:min(7.2vw,28px);font-weight:600;color:var(--saisi);position:relative}
+.pave button small{position:absolute;bottom:3px;left:0;right:0;font-size:.58rem;color:var(--doux);font-weight:600}
+.pave button.fini{opacity:.25}
+.ecran{flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;text-align:center;padding:10px 6px}
+.logo{width:92px;height:92px;margin:0 auto;border-radius:24px;background:var(--grille);box-shadow:var(--ombre);display:grid;grid-template-columns:repeat(3,1fr);padding:10px;gap:3px}
+.logo i{border-radius:5px;background:var(--acc-cl);display:grid;place-items:center;font-style:normal;font-weight:700;color:var(--acc);font-size:.9rem}
+h1{font-size:1.9rem;font-weight:700;letter-spacing:.01em}
+.sous{color:var(--doux)}
+.btn{display:block;width:100%;padding:15px;border-radius:16px;font-weight:700;font-size:1.02rem;background:var(--carte);box-shadow:var(--ombre);color:var(--txt)}
+.btn.princ{background:var(--acc);color:#fff}
+.btn small{display:block;font-weight:600;font-size:.76rem;opacity:.75;margin-top:2px}
+.niveaux{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.defi{background:linear-gradient(135deg,var(--acc),#4f7d66);color:#fff;border-radius:18px;padding:16px;text-align:left;box-shadow:var(--ombre)}
+.defi b{font-size:1.05rem}
+.defi p{opacity:.9;font-size:.86rem;margin-top:2px}
+.voile{position:fixed;inset:0;background:rgba(20,28,24,.45);display:grid;place-items:center;z-index:20;padding:20px}
+.boite{width:100%;max-width:380px;background:var(--carte);border-radius:22px;padding:22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.boite h2{font-size:1.35rem;margin-bottom:6px}
+.boite .pile{display:grid;gap:10px;margin-top:16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stats div{background:var(--bg);border-radius:12px;padding:10px 4px;font-size:.72rem;color:var(--doux);font-weight:600}
+.stats b{display:block;font-size:1.1rem;color:var(--txt)}
+.reglage{display:flex;justify-content:space-between;align-items:center;padding:12px 2px;border-bottom:1px solid var(--ligne);text-align:left;font-weight:600}
+.interr{width:48px;height:28px;border-radius:14px;background:var(--ligne);position:relative;transition:background .2s}
+.interr::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:left .2s}
+.interr.on{background:var(--acc)}.interr.on::after{left:23px}
+.pub{position:fixed;inset:0;z-index:40;background:#111;color:#fff;display:grid;place-items:center;text-align:center}
+.pub b{display:block;font-size:2.4rem;margin-top:8px}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:var(--txt);color:var(--bg);padding:11px 16px;border-radius:12px;font-weight:600;font-size:.9rem;z-index:50;max-width:90%}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<script>
+(function () {
+"use strict";
+// ---------- Pont natif (games-kit : mêmes appels sur iOS et Android) ----------
+var H = function (n) { return window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers[n]; };
+var natif = function (n, msg) { var h = H(n); return h ? Promise.resolve(h.postMessage(msg)).catch(function () { return false; }) : Promise.resolve(null); };
+var PID = "com.zvisionclub.sudokuzen.noads";
+
+// ---------- Textes (FR / EN) ----------
+var LANG = (navigator.language || "fr").slice(0, 2) === "fr" ? "fr" : "en";
+var T = {
+  fr: { sous: "Le sudoku calme, sans fin", defi: "Défi du jour", defiTxt: "Une grille unique pour tout le monde aujourd'hui", nouvelle: "Nouvelle partie", reprendre: "Reprendre", niveaux: ["Facile", "Moyen", "Difficile", "Expert"], erreurs: "Erreurs", notes: "Notes", effacer: "Effacer", annuler: "Annuler", indice: "Indice", bravo: "Bravo !", resolu: "Grille terminée en", rejouer: "Nouvelle grille", menu: "Menu", pubIndice: "Regarder une courte pub pour obtenir 3 indices ?", oui: "Regarder", non: "Plus tard", pubTest: "Publicité (test)", reglages: "Réglages", sombre: "Thème sombre", surligner: "Surligner les chiffres identiques", verifier: "Montrer les erreurs", sansPub: "Sans pub", sansPubTxt: "Retire les publicités entre les grilles", acheter: "Acheter", restaurer: "Restaurer mes achats", consent: "Choix publicitaires", fermer: "Fermer", stats: "Statistiques", meilleur: "Meilleur temps", jouees: "Grilles finies", serie: "Série du défi", plusIndice: "Plus d'indice disponible", indicesGagnes: "+3 indices", achatOk: "Merci ! Les pubs sont retirées.", restOk: "Achats restaurés", gen: "Préparation de la grille…", defiFait: "Défi du jour réussi ✓", jours: "j" },
+  en: { sous: "Calm, endless sudoku", defi: "Daily challenge", defiTxt: "One grid for everyone today", nouvelle: "New game", reprendre: "Continue", niveaux: ["Easy", "Medium", "Hard", "Expert"], erreurs: "Mistakes", notes: "Notes", effacer: "Erase", annuler: "Undo", indice: "Hint", bravo: "Well done!", resolu: "Solved in", rejouer: "New grid", menu: "Menu", pubIndice: "Watch a short ad to get 3 hints?", oui: "Watch", non: "Later", pubTest: "Ad (test)", reglages: "Settings", sombre: "Dark theme", surligner: "Highlight identical numbers", verifier: "Show mistakes", sansPub: "No ads", sansPubTxt: "Removes ads between grids", acheter: "Buy", restaurer: "Restore purchases", consent: "Ad choices", fermer: "Close", stats: "Statistics", meilleur: "Best time", jouees: "Grids solved", serie: "Daily streak", plusIndice: "No hints left", indicesGagnes: "+3 hints", achatOk: "Thank you! Ads are removed.", restOk: "Purchases restored", gen: "Preparing the grid…", defiFait: "Daily challenge done ✓", jours: "d" }
+}[LANG];
+
+// ---------- Sauvegarde ----------
+var CLE = "sudokuzen_v1";
+var S = (function () { try { return JSON.parse(localStorage.getItem(CLE)) || {}; } catch (e) { return {}; } })();
+S.reg = S.reg || { sombre: matchMedia && matchMedia("(prefers-color-scheme: dark)").matches, surligner: true, verifier: true };
+S.stats = S.stats || { fini: [0, 0, 0, 0], meilleur: [0, 0, 0, 0] };
+S.defis = S.defis || {}; S.indices = S.indices == null ? 3 : S.indices; S.parties = S.parties || 0; S.noads = !!S.noads; S.derPub = S.derPub || 0;
+function sauver() { try { localStorage.setItem(CLE, JSON.stringify(S)); } catch (e) {} }
+document.body.classList.toggle("sombre", !!S.reg.sombre);
+
+// ---------- Générateur de grilles (solution unique garantie) ----------
+function rng(seed) { var a = seed >>> 0 || 1; return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function melange(a, r) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+var LIG = [], COL = [], BLO = [];
+for (var i = 0; i < 81; i++) { LIG[i] = Math.floor(i / 9); COL[i] = i % 9; BLO[i] = Math.floor(LIG[i] / 3) * 3 + Math.floor(COL[i] / 3); }
+function resoudre(g, limite, r) {
+  var l = new Array(9).fill(0), c = new Array(9).fill(0), b = new Array(9).fill(0), vides = [];
+  for (var i = 0; i < 81; i++) { if (g[i]) { var m = 1 << g[i]; l[LIG[i]] |= m; c[COL[i]] |= m; b[BLO[i]] |= m; } else vides.push(i); }
+  var n = 0, grille = g.slice(), sol = null;
+  (function rec() {
+    if (n >= limite) return;
+    var best = -1, bestMask = 0, bestCount = 10;
+    for (var k = 0; k < vides.length; k++) {
+      var p = vides[k]; if (grille[p]) continue;
+      var libres = ~(l[LIG[p]] | c[COL[p]] | b[BLO[p]]) & 0x3FE, cnt = 0;
+      for (var x = libres; x; x &= x - 1) cnt++;
+      if (cnt < bestCount) { best = p; bestMask = libres; bestCount = cnt; if (cnt <= 1) break; }
+    }
+    if (best < 0) { n++; if (!sol) sol = grille.slice(); return; }
+    if (!bestCount) return;
+    var vals = []; for (var v = 1; v <= 9; v++) if (bestMask & (1 << v)) vals.push(v);
+    if (r) melange(vals, r);
+    for (var q = 0; q < vals.length && n < limite; q++) {
+      var mm = 1 << vals[q]; grille[best] = vals[q]; l[LIG[best]] |= mm; c[COL[best]] |= mm; b[BLO[best]] |= mm;
+      rec();
+      grille[best] = 0; l[LIG[best]] &= ~mm; c[COL[best]] &= ~mm; b[BLO[best]] &= ~mm;
+    }
+  })();
+  return { n: n, sol: sol };
+}
+// nombre de cases données visé par niveau
+var INDICES = [40, 33, 28, 24];
+function generer(niveau, seed) {
+  var r = rng(seed || (Math.random() * 4294967296));
+  var plein = resoudre(new Array(81).fill(0), 1, r).sol;
+  var g = plein.slice(), ordre = melange(Array.from({ length: 81 }, function (_, i) { return i; }), r), cible = INDICES[niveau], restants = 81;
+  for (var k = 0; k < ordre.length && restants > cible; k++) {
+    var p = ordre[k], sauve = g[p]; g[p] = 0;
+    if (resoudre(g, 2).n !== 1) g[p] = sauve; else restants--;
+  }
+  return { grille: g, solution: plein, niveau: niveau };
+}
+
+// ---------- État de partie ----------
+var P = S.partie || null, sel = -1, modeNotes = false, minuteur = null, histo = [];
+function nouvellePartie(niveau, defi) {
+  var seed = null;
+  if (defi) { var d = new Date(); seed = d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
+  var g = generer(niveau, seed);
+  P = { donne: g.grille.slice(), val: g.grille.slice(), sol: g.solution, notes: new Array(81).fill(0), niveau: niveau, temps: 0, erreurs: 0, defi: defi ? cleJour() : null };
+  S.partie = P; histo = []; sel = -1; modeNotes = false; sauver(); jeu();
+}
+function cleJour() { return new Date().toISOString().slice(0, 10); }
+function fmt(s) { var m = Math.floor(s / 60), x = s % 60; return m + ":" + (x < 10 ? "0" : "") + x; }
+
+// ---------- Écrans ----------
+var APP = document.getElementById("app");
+var IC = {
+  reg: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  ret: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>',
+  annuler: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>',
+  effacer: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 20H9L4 15l9-9 7 7-6 6"/></svg>',
+  notes: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  indice: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V16h8v-1.3A7 7 0 0 0 12 2z"/></svg>'
+};
+function accueil() {
+  arreter();
+  var dj = S.defis[cleJour()];
+  var h = '<div class="haut"><span></span><button class="ico" data-reg aria-label="' + T.reglages + '">' + IC.reg + "</button></div>";
+  h += '<div class="ecran"><div class="logo">' + [5, "", 3, "", 9, "", 7, "", 1].map(function (x) { return "<i>" + x + "</i>"; }).join("") + "</div><div><h1>Sudoku Zen</h1><p class=\"sous\">" + T.sous + "</p></div>";
+  h += '<button class="defi" data-defi><b>☀️ ' + T.defi + "</b><p>" + (dj ? T.defiFait + " · " + fmt(dj) : T.defiTxt) + "</p></button>";
+  if (P && P.val.some(function (v, i) { return v !== P.sol[i]; })) h += '<button class="btn princ" data-reprendre>' + T.reprendre + "<small>" + T.niveaux[P.niveau] + " · " + fmt(P.temps) + "</small></button>";
+  h += '<p class="sous" style="margin-top:6px;font-weight:600">' + T.nouvelle + '</p><div class="niveaux">' + T.niveaux.map(function (n, k) { return '<button class="btn" data-niv="' + k + '">' + n + "</button>"; }).join("") + "</div>";
+  h += '<div class="stats"><div><b>' + S.stats.fini.reduce(function (a, b) { return a + b; }, 0) + "</b>" + T.jouees + "</div><div><b>" + serieDefi() + T.jours + "</b>" + T.serie + "</div><div><b>" + (S.stats.meilleur[1] ? fmt(S.stats.meilleur[1]) : "–") + "</b>" + T.meilleur + " (" + T.niveaux[1] + ")</div></div></div>";
+  APP.innerHTML = h;
+  APP.querySelector("[data-reg]").onclick = reglages;
+  APP.querySelector("[data-defi]").onclick = function () { if (P && P.defi === cleJour() && P.val.some(function (v, i) { return v !== P.sol[i]; })) jeu(); else lancer(1, true); };
+  var r = APP.querySelector("[data-reprendre]"); if (r) r.onclick = jeu;
+  APP.querySelectorAll("[data-niv]").forEach(function (b) { b.onclick = function () { lancer(+b.dataset.niv, false); }; });
+}
+function lancer(niv, defi) { APP.innerHTML = '<div class="ecran"><p class="sous">' + T.gen + "</p></div>"; setTimeout(function () { nouvellePartie(niv, defi); }, 30); }
+function serieDefi() { var n = 0, d = new Date(); for (;;) { var k = d.toISOString().slice(0, 10); if (!S.defis[k]) { if (n === 0 && k === cleJour()) { d.setDate(d.getDate() - 1); continue; } break; } n++; d.setDate(d.getDate() - 1); } return n; }
+
+function jeu() {
+  if (!P) return accueil();
+  var h = '<div class="haut"><button class="ico" data-menu aria-label="' + T.menu + '">' + IC.ret + '</button><div class="titre" style="text-align:center">' + (P.defi ? "☀️ " + T.defi : "Sudoku Zen") + "<small>" + T.niveaux[P.niveau] + '</small></div><button class="ico" data-reg>' + IC.reg + "</button></div>";
+  h += '<div class="infos"><span>' + T.erreurs + " : <b data-err>" + P.erreurs + "</b></span><span data-temps>" + fmt(P.temps) + "</span></div>";
+  h += '<div class="grille" id="g">' + P.val.map(function (_, i) { return '<div class="case" data-i="' + i + '"></div>'; }).join("") + "</div>";
+  h += '<div class="outils"><button class="outil" data-annuler>' + IC.annuler + T.annuler + '</button><button class="outil" data-effacer>' + IC.effacer + T.effacer + '</button><button class="outil" data-notes>' + IC.notes + T.notes + '</button><button class="outil" data-indice>' + IC.indice + T.indice + '<span class="pastille" data-nind></span></button></div>';
+  h += '<div class="pave">' + [1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (n) { return '<button data-n="' + n + '">' + n + "<small></small></button>"; }).join("") + "</div>";
+  APP.innerHTML = h;
+  APP.querySelector("[data-menu]").onclick = accueil;
+  APP.querySelector("[data-reg]").onclick = reglages;
+  APP.querySelectorAll(".case").forEach(function (c) { c.onclick = function () { sel = +c.dataset.i; dessiner(); }; });
+  APP.querySelectorAll("[data-n]").forEach(function (b) { b.onclick = function () { saisir(+b.dataset.n); }; });
+  APP.querySelector("[data-effacer]").onclick = function () { saisir(0); };
+  APP.querySelector("[data-notes]").onclick = function () { modeNotes = !modeNotes; dessiner(); };
+  APP.querySelector("[data-annuler]").onclick = annuler;
+  APP.querySelector("[data-indice]").onclick = indice;
+  dessiner(); demarrer();
+}
+function dessiner() {
+  var cases = APP.querySelectorAll(".case"); if (!cases.length) return;
+  var vSel = sel >= 0 ? P.val[sel] : 0;
+  cases.forEach(function (c, i) {
+    var v = P.val[i], cls = "case";
+    if (P.donne[i]) cls += " donne";
+    if (sel >= 0 && i !== sel && (LIG[i] === LIG[sel] || COL[i] === COL[sel] || BLO[i] === BLO[sel])) cls += " zone";
+    if (S.reg.surligner && vSel && v === vSel && i !== sel) cls += " pareil";
+    if (i === sel) cls += " sel";
+    if (v && !P.donne[i] && S.reg.verifier && v !== P.sol[i]) cls += " faux";
+    if (c.className.indexOf("indice") >= 0) cls += " indice";
+    c.className = cls;
+    if (v) c.textContent = v;
+    else if (P.notes[i]) { var s = '<div class="notes">'; for (var n = 1; n <= 9; n++) s += "<span>" + (P.notes[i] & (1 << n) ? n : "") + "</span>"; c.innerHTML = s + "</div>"; }
+    else c.textContent = "";
+  });
+  var compte = new Array(10).fill(0); P.val.forEach(function (v) { if (v && (!S.reg.verifier || true)) compte[v]++; });
+  APP.querySelectorAll("[data-n]").forEach(function (b) { var n = +b.dataset.n; b.classList.toggle("fini", compte[n] >= 9); b.querySelector("small").textContent = compte[n] >= 9 ? "" : 9 - compte[n]; });
+  APP.querySelector("[data-notes]").classList.toggle("on", modeNotes);
+  APP.querySelector("[data-nind]").textContent = S.indices > 0 ? S.indices : "+";
+  APP.querySelector("[data-err]").textContent = P.erreurs;
+}
+function saisir(n) {
+  if (sel < 0 || P.donne[sel]) return;
+  histo.push({ i: sel, v: P.val[sel], n: P.notes[sel] });
+  if (n === 0) { P.val[sel] = 0; P.notes[sel] = 0; }
+  else if (modeNotes) { if (!P.val[sel]) P.notes[sel] ^= (1 << n); }
+  else {
+    if (P.val[sel] === n) { P.val[sel] = 0; }
+    else {
+      P.val[sel] = n; P.notes[sel] = 0;
+      if (n !== P.sol[sel]) { P.erreurs++; vibrer(40); }
+      else { for (var i = 0; i < 81; i++) if (!P.val[i] && (LIG[i] === LIG[sel] || COL[i] === COL[sel] || BLO[i] === BLO[sel])) P.notes[i] &= ~(1 << n); }
+    }
+  }
+  sauver(); dessiner(); verifierFin();
+}
+function annuler() { var h = histo.pop(); if (!h) return; P.val[h.i] = h.v; P.notes[h.i] = h.n; sel = h.i; sauver(); dessiner(); }
+function indice() {
+  if (S.indices <= 0) {
+    return boite(T.pubIndice, [[T.oui, function () { pubRecompensee().then(function (ok) { if (ok) { S.indices += 3; sauver(); toast(T.indicesGagnes); dessiner(); } }); }], [T.non, null]]);
+  }
+  var cible = (sel >= 0 && !P.donne[sel] && P.val[sel] !== P.sol[sel]) ? sel : -1;
+  if (cible < 0) { var vides = []; for (var i = 0; i < 81; i++) if (P.val[i] !== P.sol[i]) vides.push(i); if (!vides.length) return; cible = vides[Math.floor(Math.random() * vides.length)]; }
+  histo.push({ i: cible, v: P.val[cible], n: P.notes[cible] });
+  P.val[cible] = P.sol[cible]; P.notes[cible] = 0; S.indices--; sel = cible; sauver(); dessiner();
+  var el = APP.querySelector('[data-i="' + cible + '"]'); if (el) { el.classList.add("indice"); setTimeout(function () { el.classList.remove("indice"); }, 700); }
+  verifierFin();
+}
+function verifierFin() {
+  if (P.val.some(function (v, i) { return v !== P.sol[i]; })) return;
+  arreter(); vibrer([30, 40, 60]);
+  var k = P.niveau; S.stats.fini[k]++; if (!S.stats.meilleur[k] || P.temps < S.stats.meilleur[k]) S.stats.meilleur[k] = P.temps;
+  if (P.defi) S.defis[P.defi] = P.temps;
+  S.parties++; var t = P.temps, err = P.erreurs, niv = P.niveau, defi = !!P.defi; S.partie = null; P = null; sauver();
+  setTimeout(function () {
+    boite("<h2>🌿 " + T.bravo + "</h2><p class=\"sous\">" + T.resolu + " " + fmt(t) + " · " + T.erreurs + " : " + err + "</p>", [[T.rejouer, function () { interstitiel().then(function () { lancer(niv, false); }); }], [T.menu, function () { interstitiel().then(accueil); }]], true);
+  }, 350);
+}
+// ---------- Minuteur ----------
+function demarrer() { arreter(); minuteur = setInterval(function () { if (document.hidden || !P) return; P.temps++; var el = APP.querySelector("[data-temps]"); if (el) el.textContent = fmt(P.temps); if (P.temps % 5 === 0) sauver(); }, 1000); }
+function arreter() { if (minuteur) clearInterval(minuteur); minuteur = null; }
+
+// ---------- Pubs et achat ----------
+function pubTest() { return new Promise(function (res) { var el = document.createElement("div"); el.className = "pub"; el.innerHTML = "<div>" + T.pubTest + "<b>3</b></div>"; document.body.appendChild(el); var n = 3; var iv = setInterval(function () { n--; el.querySelector("b").textContent = n > 0 ? n : "✓"; if (n <= 0) { clearInterval(iv); setTimeout(function () { el.remove(); res(true); }, 300); } }, 1000); }); }
+function pubRecompensee() { if (H("ads")) return natif("ads", { op: "rewarded" }).then(function (r) { return r === true; }); return pubTest(); }
+// Interstitiel discret : seulement entre deux grilles, à partir de la 3e, au plus toutes les 4 minutes, jamais avec « Sans pub ».
+function interstitiel() {
+  if (S.noads || S.parties < 3 || Date.now() - S.derPub < 240000) return Promise.resolve();
+  S.derPub = Date.now(); sauver();
+  return H("ads") ? natif("ads", { op: "interstitial" }) : pubTest();
+}
+function acheter() {
+  if (!H("store")) { S.noads = true; sauver(); toast(T.achatOk + " (test)"); return reglages(); }
+  natif("store", { op: "buy", id: PID }).then(function (r) { if (r) { S.noads = true; sauver(); toast(T.achatOk); reglages(); } });
+}
+function restaurer() { natif("store", { op: "restore" }).then(function (l) { if (Array.isArray(l) && l.indexOf(PID) >= 0) { S.noads = true; sauver(); } toast(T.restOk); reglages(); }); }
+window.nativeStoreUpdate = function (pid) { if (pid === PID) { S.noads = true; sauver(); } };
+if (H("ads")) natif("ads", { op: "init" });
+if (H("store")) natif("store", { op: "owned" }).then(function (l) { if (Array.isArray(l) && l.indexOf(PID) >= 0) { S.noads = true; sauver(); } });
+
+// ---------- Fenêtres ----------
+function boite(html, boutons, gros) {
+  var v = document.createElement("div"); v.className = "voile";
+  v.innerHTML = '<div class="boite">' + (gros ? html : "<p style=\"font-weight:600\">" + html + "</p>") + '<div class="pile">' + boutons.map(function (b, k) { return '<button class="btn' + (k === 0 ? " princ" : "") + '" data-k="' + k + '">' + b[0] + "</button>"; }).join("") + "</div></div>";
+  document.body.appendChild(v);
+  v.querySelectorAll("[data-k]").forEach(function (el) { el.onclick = function () { v.remove(); var f = boutons[+el.dataset.k][1]; if (f) f(); }; });
+}
+function reglages() {
+  var v = document.querySelector(".voile"); if (v) v.remove();
+  v = document.createElement("div"); v.className = "voile";
+  var ligne = function (k, txt) { return '<div class="reglage"><span>' + txt + '</span><button class="interr' + (S.reg[k] ? " on" : "") + '" data-r="' + k + '"></button></div>'; };
+  v.innerHTML = '<div class="boite" style="text-align:left"><h2>' + T.reglages + "</h2>" + ligne("sombre", T.sombre) + ligne("surligner", T.surligner) + ligne("verifier", T.verifier) +
+    '<div style="margin-top:16px"><b>' + T.sansPub + '</b><p class="sous" style="font-size:.86rem">' + T.sansPubTxt + '</p></div><div class="pile">' + (S.noads ? '<p class="sous">✓ ' + T.sansPub + "</p>" : '<button class="btn princ" data-acheter>' + T.acheter + "</button>") +
+    '<button class="btn" data-restaurer>' + T.restaurer + "</button>" + (H("ads") ? '<button class="btn" data-consent>' + T.consent + "</button>" : "") + '<button class="btn" data-fermer>' + T.fermer + "</button></div></div>";
+  document.body.appendChild(v);
+  v.querySelectorAll("[data-r]").forEach(function (b) { b.onclick = function () { var k = b.dataset.r; S.reg[k] = !S.reg[k]; sauver(); b.classList.toggle("on", S.reg[k]); document.body.classList.toggle("sombre", !!S.reg.sombre); if (P) dessiner(); }; });
+  var a = v.querySelector("[data-acheter]"); if (a) a.onclick = function () { v.remove(); acheter(); };
+  v.querySelector("[data-restaurer]").onclick = function () { v.remove(); restaurer(); };
+  var c = v.querySelector("[data-consent]"); if (c) c.onclick = function () { natif("ads", { op: "consentForm" }); };
+  v.querySelector("[data-fermer]").onclick = function () { v.remove(); };
+}
+function toast(t) { var el = document.createElement("div"); el.className = "toast"; el.textContent = t; document.body.appendChild(el); setTimeout(function () { el.remove(); }, 2200); }
+function vibrer(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+
+// clavier sur ordinateur
+document.addEventListener("keydown", function (e) {
+  if (!P || !APP.querySelector(".grille")) return;
+  if (e.key >= "1" && e.key <= "9") saisir(+e.key);
+  else if (e.key === "Backspace" || e.key === "Delete" || e.key === "0") saisir(0);
+  else if (e.key === "n") { modeNotes = !modeNotes; dessiner(); }
+  else if (/^Arrow/.test(e.key) && sel >= 0) { var d = { ArrowUp: -9, ArrowDown: 9, ArrowLeft: -1, ArrowRight: 1 }[e.key]; sel = (sel + d + 81) % 81; dessiner(); e.preventDefault(); }
+});
+document.addEventListener("visibilitychange", function () { if (document.hidden) sauver(); });
+window.SUDOKU = { generer: generer, resoudre: resoudre };
+accueil();
+})();
+</script>
+<script>if("serviceWorker"in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});</script>
+</body>
+</html>

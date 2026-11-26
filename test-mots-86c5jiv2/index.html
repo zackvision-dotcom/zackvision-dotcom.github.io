@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Mots Mêlés</title><meta name="robots" content="noindex,nofollow">
+<style>
+  :root{--bg:#fff7e8;--ink:#3b2a1a;--card:#ffffff;--edge:#e6d3b3;--accent:#e8663c;--soft:#f6e7cc}
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:ui-rounded,"Nunito","Segoe UI Rounded",system-ui,-apple-system,"Segoe UI",sans-serif;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;overflow:hidden}
+  #app{height:100%;display:flex;flex-direction:column;max-width:560px;margin:0 auto;padding:calc(10px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px))}
+  header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px}
+  h1{font-size:22px;margin:0}
+  button{font-family:inherit;border:0;cursor:pointer;color:inherit}
+  .pill{background:var(--card);border-radius:14px;padding:8px 12px;font-weight:800;font-size:14px;box-shadow:0 3px 0 var(--edge)}
+  .cta{background:var(--accent);color:#fff;border-radius:16px;padding:14px 18px;font-weight:900;font-size:17px;box-shadow:0 4px 0 #a8431f;width:100%}
+  .screen{flex:1;display:flex;flex-direction:column;gap:12px;min-height:0}
+  #home{overflow:auto;padding-bottom:10px}
+  .daily{background:linear-gradient(135deg,#ffd27a,#ff9d6c);border-radius:20px;padding:16px;box-shadow:0 4px 0 #d9824f}
+  .daily b{font-size:19px;display:block}.daily small{font-weight:700;opacity:.8}
+  .themes{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .theme{background:var(--card);border-radius:16px;padding:12px;box-shadow:0 3px 0 var(--edge);text-align:left;font-weight:800;font-size:15px}
+  .theme span{font-size:26px;display:block}.theme small{font-weight:700;opacity:.6}
+  .sizes{display:flex;gap:8px}.sizes button{flex:1}.sizes .on{background:var(--ink);color:#fff}
+  #gridWrap{position:relative;width:100%;aspect-ratio:1;max-height:56vh;margin:0 auto;background:var(--card);border-radius:18px;box-shadow:0 4px 0 var(--edge);touch-action:none}
+  #grid{position:absolute;inset:8px;display:grid}
+  #grid div{display:flex;align-items:center;justify-content:center;font-weight:800;position:relative;z-index:2}
+  #lines{position:absolute;inset:8px;width:calc(100% - 16px);height:calc(100% - 16px);z-index:1;pointer-events:none}
+  #words{display:flex;flex-wrap:wrap;gap:6px 10px;justify-content:center;overflow:auto;padding:2px 0;font-weight:800;font-size:14px}
+  #words span{padding:3px 8px;border-radius:9px;background:var(--soft)}
+  #words span.done{text-decoration:line-through;opacity:.45}
+  #words span.hint{outline:2px solid var(--accent)}
+  .bar{display:flex;gap:8px;align-items:center;justify-content:space-between}
+  #win{position:fixed;inset:0;background:rgba(59,42,26,.45);display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{background:var(--bg);border-radius:22px;padding:22px;text-align:center;max-width:360px;width:100%;box-shadow:0 6px 0 var(--edge)}
+  .card h2{margin:0 0 6px;font-size:26px}.stars{font-size:38px;letter-spacing:4px}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><button id="back" class="pill" hidden>←</button><h1 id="ttl"></h1><div style="display:flex;gap:6px"><button id="lang" class="pill"></button><button id="snd" class="pill">🔊</button></div></header>
+  <div id="home" class="screen">
+    <button id="daily" class="daily"><b id="dT"></b><small id="dS"></small></button>
+    <div class="sizes" id="sizes"></div>
+    <div class="themes" id="themes"></div>
+  </div>
+  <div id="game" class="screen" hidden>
+    <div class="bar"><div class="pill" id="info"></div><div class="pill" id="timer">0:00</div><button class="pill" id="hint"></button></div>
+    <div id="gridWrap"><svg id="lines"></svg><div id="grid"></div></div>
+    <div id="words"></div>
+  </div>
+</div>
+<div id="win" hidden><div class="card"><div class="stars" id="stars"></div><h2 id="wT"></h2><p id="wS" style="font-weight:700"></p><button class="cta" id="next"></button><button class="pill" id="home2" style="margin-top:10px"></button></div></div>
+<script>
+'use strict';
+// ---------- texts & word lists (FR / EN) ----------
+const L = {
+  fr: { title: 'Mots Mêlés', daily: 'Grille du jour', streak: 'Série : {n} jour(s)', done: 'Terminée aujourd\'hui ✔', sizes: ['Facile', 'Normal', 'Difficile'], hint: '💡 Indice ({n})', hintAd: '💡 Indice 🎬', win: 'Bravo !', time: 'Temps : {t}', next: 'Grille suivante', home: 'Accueil', found: '{a}/{b} mots', level: 'grille {n}',
+    themes: { animaux: ['🐾', 'Animaux'], cuisine: ['🍳', 'Cuisine'], nature: ['🌿', 'Nature'], voyage: ['✈️', 'Voyage'], maison: ['🏠', 'Maison'], sport: ['⚽', 'Sport'], musique: ['🎵', 'Musique'], metiers: ['🧑‍🔧', 'Métiers'], fruits: ['🍓', 'Fruits et légumes'], mer: ['🌊', 'Mer'] },
+    words: {
+      animaux: 'chat chien cheval lapin renard hibou tortue girafe zèbre loutre castor dauphin baleine pingouin écureuil hérisson panda koala tigre lion souris canard mouton chèvre abeille papillon',
+      cuisine: 'farine beurre sucre poêle four fouet recette gâteau crêpe soupe salade tarte pain fromage épices vanille cannelle moutarde omelette gratin quiche biscuit confiture levure casserole louche',
+      nature: 'forêt rivière montagne prairie fleur arbre feuille racine mousse rocher colline vallée cascade étang nuage pluie soleil orage brume rosée graine bourgeon sentier clairière ruisseau falaise',
+      voyage: 'valise billet avion train gare hôtel plage carte passeport musée visite photo guide douane bagage escale croisière randonnée camping souvenir frontière aéroport navette itinéraire auberge vacances',
+      maison: 'cuisine salon chambre grenier cave jardin porte fenêtre escalier canapé lampe tapis rideau étagère tiroir miroir coussin placard balcon cheminée couloir plafond armoire fauteuil horloge tableau',
+      sport: 'football tennis natation course vélo rugby judo escrime voile ski surf golf boxe danse yoga basket handball aviron marathon plongée pétanque escalade patinage volley karaté triathlon',
+      musique: 'piano guitare violon flûte batterie trompette harpe chanson mélodie rythme concert orchestre refrain note accord tambour clavier chorale opéra solfège partition basse saxophone accordéon tempo micro',
+      metiers: 'boulanger médecin pompier facteur pilote jardinier menuisier coiffeur libraire fleuriste plombier dentiste pharmacien cuisinier peintre maçon pêcheur vétérinaire professeur journaliste couturier horloger berger notaire',
+      fruits: 'pomme poire fraise cerise abricot pêche prune raisin melon citron orange banane kiwi mangue tomate carotte poireau navet radis courgette aubergine poivron épinard brocoli potiron framboise',
+      mer: 'vague marée sable coquillage algue phare bateau voile ancre mouette crabe méduse corail récif dune écume port jetée falaise galet étoile homard huître goéland horizon embruns',
+    } },
+  en: { title: 'Word Search', daily: 'Daily puzzle', streak: 'Streak: {n} day(s)', done: 'Done today ✔', sizes: ['Easy', 'Normal', 'Hard'], hint: '💡 Hint ({n})', hintAd: '💡 Hint 🎬', win: 'Well done!', time: 'Time: {t}', next: 'Next puzzle', home: 'Home', found: '{a}/{b} words', level: 'puzzle {n}',
+    themes: { animaux: ['🐾', 'Animals'], cuisine: ['🍳', 'Kitchen'], nature: ['🌿', 'Nature'], voyage: ['✈️', 'Travel'], maison: ['🏠', 'Home'], sport: ['⚽', 'Sports'], musique: ['🎵', 'Music'], metiers: ['🧑‍🔧', 'Jobs'], fruits: ['🍓', 'Fruit & veg'], mer: ['🌊', 'Sea'] },
+    words: {
+      animaux: 'cat dog horse rabbit fox owl turtle giraffe zebra otter beaver dolphin whale penguin squirrel hedgehog panda koala tiger lion mouse duck sheep goat bee butterfly',
+      cuisine: 'flour butter sugar pan oven whisk recipe cake pancake soup salad pie bread cheese spices vanilla cinnamon mustard omelette biscuit jam yeast ladle kettle grater spatula',
+      nature: 'forest river mountain meadow flower tree leaf root moss rock hill valley waterfall pond cloud rain sun storm mist dew seed bud trail glade stream cliff',
+      voyage: 'suitcase ticket plane train station hotel beach map passport museum tour photo guide customs luggage cruise hiking camping souvenir border airport shuttle route hostel holiday journey',
+      maison: 'kitchen lounge bedroom attic cellar garden door window stairs sofa lamp rug curtain shelf drawer mirror cushion closet balcony fireplace hallway ceiling wardrobe armchair clock painting',
+      sport: 'football tennis swimming running cycling rugby judo fencing sailing skiing surfing golf boxing dancing yoga basketball handball rowing marathon diving climbing skating volleyball karate triathlon archery',
+      musique: 'piano guitar violin flute drums trumpet harp song melody rhythm concert orchestra chorus note chord keyboard choir opera score bass saxophone accordion tempo microphone banjo cello',
+      metiers: 'baker doctor firefighter postman pilot gardener carpenter hairdresser bookseller florist plumber dentist pharmacist cook painter builder fisherman vet teacher journalist tailor watchmaker shepherd lawyer nurse farmer',
+      fruits: 'apple pear strawberry cherry apricot peach plum grape melon lemon orange banana kiwi mango tomato carrot leek turnip radish zucchini eggplant pepper spinach broccoli pumpkin raspberry',
+      mer: 'wave tide sand shell seaweed lighthouse boat sail anchor seagull crab jellyfish coral reef dune foam harbour pier cliff pebble starfish lobster oyster horizon spray island',
+    } },
+};
+let lang = (navigator.language || 'en').startsWith('fr') ? 'fr' : 'en';
+const KEY = 'motsmeles.save.v1';
+let S = { lang: null, muted: false, size: 1, levels: {}, daily: '', streak: 0, hints: 3, hintDay: '', plays: 0 };
+try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
+if (S.lang) lang = S.lang;
+const T = () => L[lang], fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]), $ = id => document.getElementById(id);
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+const yesterday = () => { const d = new Date(Date.now() - 864e5); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+if (S.hintDay !== today()) { S.hintDay = today(); S.hints = Math.max(S.hints, 3); }
+
+// ---------- ads bridge (apps and portals only) ----------
+const ADS = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.ads;
+const ad = kind => ADS ? Promise.resolve().then(() => ADS.postMessage({ op: kind })).then(ok => !!ok, () => false) : Promise.resolve(false);
+if (ADS) try { ADS.postMessage({ op: 'init' }); } catch (e) {}
+
+// ---------- sound ----------
+let ac = null; function beep(f, d = 0.09, type = 'triangle', v = 0.12, at = 0) { if (S.muted) return; try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + at; o.type = type; o.frequency.value = f; g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + d + 0.02); } catch (e) {} }
+
+// ---------- puzzle generation (seeded) ----------
+function rng(seed) { let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+const hash = str => { let h = 2166136261; for (const c of str) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
+const plain = w => w.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z]/g, '');
+const SIZES = [{ n: 8, words: 7, dirs: [[1, 0], [0, 1]] }, { n: 10, words: 10, dirs: [[1, 0], [0, 1], [1, 1], [1, -1]] }, { n: 12, words: 14, dirs: [[1, 0], [0, 1], [1, 1], [1, -1], [-1, 0], [0, -1], [-1, -1], [-1, 1]] }];
+const FREQ = { fr: 'EEEEEEEAAAAIIIISSSSNNNNRRRRTTTTOOOLLLUUUDDCCMMPPGBVHFQYXJKWZ', en: 'EEEEEEETTTTAAAAOOOIIINNNSSSHHRRRDDLLCUUMWFGYPBVKJXQZ' };
+function make(theme, size, seed) {
+  const R = rng(seed), cfg = SIZES[size], n = cfg.n, pool = T().words[theme].split(' ').filter(w => plain(w).length <= n && plain(w).length >= 3);
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  const g = Array.from({ length: n }, () => Array(n).fill('')), placed = [];
+  for (const w of pool) { if (placed.length >= cfg.words) break; const p = plain(w); let ok = false;
+    for (let tries = 0; tries < 120 && !ok; tries++) { const [dx, dy] = cfg.dirs[Math.floor(R() * cfg.dirs.length)], x0 = Math.floor(R() * n), y0 = Math.floor(R() * n), x1 = x0 + dx * (p.length - 1), y1 = y0 + dy * (p.length - 1);
+      if (x1 < 0 || x1 >= n || y1 < 0 || y1 >= n) continue; let fit = true; for (let k = 0; k < p.length; k++) { const c = g[y0 + dy * k][x0 + dx * k]; if (c && c !== p[k]) { fit = false; break; } }
+      if (!fit) continue; for (let k = 0; k < p.length; k++) g[y0 + dy * k][x0 + dx * k] = p[k]; placed.push({ w, p, x0, y0, x1, y1, found: false }); ok = true; } }
+  const f = FREQ[lang]; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!g[y][x]) g[y][x] = f[Math.floor(R() * f.length)];
+  return { n, g, words: placed };
+}
+
+// ---------- game state ----------
+let G = null, t0 = 0, tick = 0, sel = null, hintCell = null;
+const COLORS = ['#ffb3ab', '#ffd78a', '#b8e6a0', '#a5d8f3', '#d5b8f5', '#f9b5d8', '#bfe9df', '#ffc999'];
+function start(theme, daily) {
+  const size = daily ? 1 : S.size, lv = daily ? 0 : (S.levels[theme + size] || 0), seed = hash(daily ? 'daily' + today() + lang : theme + size + lang + lv);
+  const th = daily ? Object.keys(T().themes)[hash(today()) % 10] : theme;
+  G = Object.assign(make(th, size, seed), { theme: th, daily, size, lv, hints: 0 }); t0 = Date.now(); hintCell = null;
+  $('home').hidden = true; $('game').hidden = false; $('back').hidden = false; $('win').hidden = true; draw(); clearInterval(tick); tick = setInterval(clockTick, 500); clockTick();
+}
+function clockTick() { const s = Math.floor((Date.now() - t0) / 1000); $('timer').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function draw() {
+  const g = $('grid'), n = G.n; g.style.gridTemplateColumns = `repeat(${n},1fr)`; g.style.gridTemplateRows = `repeat(${n},1fr)`; g.style.fontSize = `min(${46 / n}vw, ${26 / n * 10}px)`;
+  g.innerHTML = G.g.map(r => r.map(c => `<div>${c}</div>`).join('')).join('');
+  $('words').innerHTML = G.words.map((w, i) => `<span id="w${i}" class="${w.found ? 'done' : ''}">${w.w.toUpperCase()}</span>`).join('');
+  const th = T().themes[G.theme]; $('info').textContent = th[0] + ' ' + (G.daily ? T().daily : th[1] + ' · ' + fmt(T().level, { n: G.lv + 1 }));
+  lines(); hintBtn();
+}
+function hintBtn() { $('hint').textContent = S.hints > 0 ? fmt(T().hint, { n: S.hints }) : ADS ? T().hintAd : fmt(T().hint, { n: 0 }); $('hint').style.opacity = S.hints > 0 || ADS ? 1 : 0.4; }
+function lines() {
+  const n = G.n, u = 100 / n, c = v => (v + 0.5) * u; let h = '';
+  G.words.forEach((w, i) => { if (w.found) h += `<line x1="${c(w.x0)}%" y1="${c(w.y0)}%" x2="${c(w.x1)}%" y2="${c(w.y1)}%" stroke="${COLORS[i % COLORS.length]}" stroke-width="${u * 0.78}%" stroke-linecap="round"/>`; });
+  if (sel) h += `<line x1="${c(sel.x0)}%" y1="${c(sel.y0)}%" x2="${c(sel.x1)}%" y2="${c(sel.y1)}%" stroke="#e8663c" stroke-opacity=".45" stroke-width="${u * 0.78}%" stroke-linecap="round"/>`;
+  if (hintCell) h += `<circle cx="${c(hintCell.x)}%" cy="${c(hintCell.y)}%" r="${u * 0.42}%" fill="none" stroke="#e8663c" stroke-width="3"><animate attributeName="opacity" values="1;.2;1" dur="1s" repeatCount="indefinite"/></circle>`;
+  $('lines').innerHTML = h;
+}
+// ---------- selection by drag (snaps to the 8 directions) ----------
+const wrap = $('gridWrap');
+function cellAt(e) { const r = $('grid').getBoundingClientRect(), n = G.n; return { x: Math.max(0, Math.min(n - 1, Math.floor((e.clientX - r.left) / r.width * n))), y: Math.max(0, Math.min(n - 1, Math.floor((e.clientY - r.top) / r.height * n))) }; }
+wrap.addEventListener('pointerdown', e => { if (!G) return; const c = cellAt(e); sel = { x0: c.x, y0: c.y, x1: c.x, y1: c.y }; wrap.setPointerCapture(e.pointerId); beep(520, 0.04); lines(); });
+wrap.addEventListener('pointermove', e => { if (!sel) return; const c = cellAt(e); let dx = c.x - sel.x0, dy = c.y - sel.y0; const ax = Math.abs(dx), ay = Math.abs(dy);
+  if (ax > ay * 2) dy = 0; else if (ay > ax * 2) dx = 0; else { const m = Math.max(ax, ay); dx = Math.sign(dx) * m; dy = Math.sign(dy) * m; }
+  let x1 = sel.x0 + dx, y1 = sel.y0 + dy; const n = G.n; while (x1 < 0 || x1 >= n || y1 < 0 || y1 >= n) { x1 -= Math.sign(dx); y1 -= Math.sign(dy); }
+  if (x1 !== sel.x1 || y1 !== sel.y1) { sel.x1 = x1; sel.y1 = y1; lines(); } });
+const endSel = () => { if (!sel) return; const s = sel; sel = null;
+  const w = G.words.find(w => !w.found && ((w.x0 === s.x0 && w.y0 === s.y0 && w.x1 === s.x1 && w.y1 === s.y1) || (w.x0 === s.x1 && w.y0 === s.y1 && w.x1 === s.x0 && w.y1 === s.y0)));
+  if (w) { w.found = true; hintCell = null; const i = G.words.indexOf(w); $('w' + i).className = 'done'; beep(660, 0.1); beep(880, 0.14, 'triangle', 0.12, 0.09); if (G.words.every(x => x.found)) setTimeout(win, 350); }
+  lines(); };
+wrap.addEventListener('pointerup', endSel); wrap.addEventListener('pointercancel', endSel);
+// ---------- hints ----------
+$('hint').onclick = async () => { if (!G) return; if (S.hints <= 0) { if (!ADS || !(await ad('rewarded'))) return; S.hints = 1; }
+  const w = G.words.find(w => !w.found); if (!w) return; S.hints--; G.hints++; hintCell = { x: w.x0, y: w.y0 }; const i = G.words.indexOf(w); $('w' + i).className = 'hint'; save(); hintBtn(); lines(); beep(440, 0.15, 'sine'); };
+// ---------- win ----------
+function win() {
+  clearInterval(tick); const s = Math.floor((Date.now() - t0) / 1000), par = [90, 180, 300][G.size], stars = G.hints === 0 && s <= par ? 3 : s <= par * 2 ? 2 : 1;
+  if (G.daily) { if (S.daily !== today()) { S.streak = S.daily === yesterday() ? S.streak + 1 : 1; S.daily = today(); S.hints++; } } else S.levels[G.theme + G.size] = G.lv + 1;
+  S.plays++; save(); [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.25, 'triangle', 0.12, i * 0.1));
+  $('stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars); $('wT').textContent = T().win; $('wS').textContent = fmt(T().time, { t: $('timer').textContent }) + (G.daily ? ' · ' + fmt(T().streak, { n: S.streak }) : '');
+  $('next').textContent = T().next; $('next').hidden = G.daily; $('home2').textContent = T().home; $('win').hidden = false;
+}
+$('next').onclick = async () => { if (S.plays % 3 === 0) await ad('interstitial'); start(G.theme, false); };
+$('home2').onclick = () => home();
+// ---------- home ----------
+function home() {
+  G = null; clearInterval(tick); $('win').hidden = true; $('game').hidden = true; $('home').hidden = false; $('back').hidden = true; const t = T(); document.title = t.title; document.documentElement.lang = lang;
+  $('ttl').textContent = t.title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; $('snd').textContent = S.muted ? '🔇' : '🔊';
+  $('dT').textContent = '📅 ' + t.daily; $('dS').textContent = (S.daily === today() ? t.done + ' · ' : '') + fmt(t.streak, { n: S.daily === today() || S.daily === yesterday() ? S.streak : 0 });
+  $('sizes').innerHTML = t.sizes.map((s, i) => `<button class="pill ${i === S.size ? 'on' : ''}" data-s="${i}">${s}</button>`).join('');
+  $('themes').innerHTML = Object.entries(t.themes).map(([k, v]) => `<button class="theme" data-t="${k}"><span>${v[0]}</span>${v[1]}<br><small>${fmt(t.level, { n: (S.levels[k + S.size] || 0) + 1 })}</small></button>`).join('');
+}
+$('sizes').onclick = e => { const b = e.target.closest('[data-s]'); if (b) { S.size = +b.dataset.s; save(); home(); } };
+$('themes').onclick = e => { const b = e.target.closest('[data-t]'); if (b) start(b.dataset.t, false); };
+$('daily').onclick = () => start(null, true);
+$('back').onclick = home;
+$('lang').onclick = () => { lang = lang === 'fr' ? 'en' : 'fr'; S.lang = lang; save(); home(); };
+$('snd').onclick = () => { S.muted = !S.muted; save(); home(); };
+home();
+window.MM = { get G() { return G; }, S, start, win, endSel: () => endSel(), setSel: s => { sel = s; } }; // debug hook for automated tests
+</script>
+</body>
+</html>

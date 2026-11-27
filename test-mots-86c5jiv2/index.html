@@ -35,11 +35,12 @@
   .card{background:var(--bg);border-radius:22px;padding:22px;text-align:center;max-width:360px;width:100%;box-shadow:0 6px 0 var(--edge)}
   .card h2{margin:0 0 6px;font-size:26px}.stars{font-size:38px;letter-spacing:4px}
   [hidden]{display:none!important}
+  .langp{position:relative;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.langp select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer}
 </style>
 </head>
 <body>
 <div id="app">
-  <header><button id="back" class="pill" hidden>←</button><h1 id="ttl"></h1><div style="display:flex;gap:6px"><button id="lang" class="pill"></button><button id="snd" class="pill">🔊</button></div></header>
+  <header><button id="back" class="pill" hidden>←</button><h1 id="ttl"></h1><div style="display:flex;gap:6px"><label class="pill langp"><span id="lang"></span><select id="langSel" aria-label="Language"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="it">Italiano</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="tr">Türkçe</option><option value="pl">Polski</option></select></label><button id="snd" class="pill">🔊</button></div></header>
   <div id="home" class="screen">
     <button id="daily" class="daily"><b id="dT"></b><small id="dS"></small></button>
     <div class="sizes" id="sizes"></div>
@@ -66,7 +67,7 @@ const L = {
       maison: 'cuisine salon chambre grenier cave jardin porte fenêtre escalier canapé lampe tapis rideau étagère tiroir miroir coussin placard balcon cheminée couloir plafond armoire fauteuil horloge tableau',
       sport: 'football tennis natation course vélo rugby judo escrime voile ski surf golf boxe danse yoga basket handball aviron marathon plongée pétanque escalade patinage volley karaté triathlon',
       musique: 'piano guitare violon flûte batterie trompette harpe chanson mélodie rythme concert orchestre refrain note accord tambour clavier chorale opéra solfège partition basse saxophone accordéon tempo micro',
-      metiers: 'boulanger médecin pompier facteur pilote jardinier menuisier coiffeur libraire fleuriste plombier dentiste pharmacien cuisinier peintre maçon pêcheur vétérinaire professeur journaliste couturier horloger berger notaire',
+      metiers: 'boulanger médecin pompier facteur pilote jardinier menuisier coiffeur libraire fleuriste plombier dentiste pharmacien cuisinier peintre maçon pêcheur vétérinaire professeur journaliste couturier horloger berger notaire chef juge maire guide moine',
       fruits: 'pomme poire fraise cerise abricot pêche prune raisin melon citron orange banane kiwi mangue tomate carotte poireau navet radis courgette aubergine poivron épinard brocoli potiron framboise',
       mer: 'vague marée sable coquillage algue phare bateau voile ancre mouette crabe méduse corail récif dune écume port jetée falaise galet étoile homard huître goéland horizon embruns',
     } },
@@ -80,17 +81,130 @@ const L = {
       maison: 'kitchen lounge bedroom attic cellar garden door window stairs sofa lamp rug curtain shelf drawer mirror cushion closet balcony fireplace hallway ceiling wardrobe armchair clock painting',
       sport: 'football tennis swimming running cycling rugby judo fencing sailing skiing surfing golf boxing dancing yoga basketball handball rowing marathon diving climbing skating volleyball karate triathlon archery',
       musique: 'piano guitar violin flute drums trumpet harp song melody rhythm concert orchestra chorus note chord keyboard choir opera score bass saxophone accordion tempo microphone banjo cello',
-      metiers: 'baker doctor firefighter postman pilot gardener carpenter hairdresser bookseller florist plumber dentist pharmacist cook painter builder fisherman vet teacher journalist tailor watchmaker shepherd lawyer nurse farmer',
+      metiers: 'baker doctor firefighter postman pilot gardener carpenter hairdresser bookseller florist plumber dentist pharmacist cook painter builder fisherman vet teacher journalist tailor watchmaker shepherd lawyer nurse farmer chef judge mayor guide monk',
       fruits: 'apple pear strawberry cherry apricot peach plum grape melon lemon orange banana kiwi mango tomato carrot leek turnip radish zucchini eggplant pepper spinach broccoli pumpkin raspberry',
       mer: 'wave tide sand shell seaweed lighthouse boat sail anchor seagull crab jellyfish coral reef dune foam harbour pier cliff pebble starfish lobster oyster horizon spray island',
     } },
+  es: { title: 'Sopa de letras', daily: 'Sopa del día', streak: 'Racha: {n} día(s)', done: 'Hecha hoy ✔', sizes: ['Fácil', 'Normal', 'Difícil'], hint: '💡 Pista ({n})', hintAd: '💡 Pista 🎬', win: '¡Bien hecho!', time: 'Tiempo: {t}', next: 'Siguiente sopa', home: 'Inicio', found: '{a}/{b} palabras', level: 'sopa {n}',
+    themes: { animaux: ['🐾', 'Animales'], cuisine: ['🍳', 'Cocina'], nature: ['🌿', 'Naturaleza'], voyage: ['✈️', 'Viajes'], maison: ['🏠', 'Casa'], sport: ['⚽', 'Deportes'], musique: ['🎵', 'Música'], metiers: ['🧑‍🔧', 'Oficios'], fruits: ['🍓', 'Frutas y verduras'], mer: ['🌊', 'Mar'] },
+    words: {
+      animaux: 'gato perro caballo conejo zorro búho tortuga jirafa cebra nutria castor delfín ballena pingüino ardilla erizo panda koala tigre león ratón pato oveja cabra abeja mariposa',
+      cuisine: 'harina mantequilla azúcar sartén horno batidor receta pastel crepe sopa ensalada tarta pan queso especias vainilla canela mostaza tortilla galleta mermelada levadura cazo cucharón olla',
+      nature: 'bosque río montaña pradera flor árbol hoja raíz musgo roca colina valle cascada estanque nube lluvia sol tormenta niebla rocío semilla brote sendero arroyo acantilado',
+      voyage: 'maleta billete avión tren estación hotel playa mapa pasaporte museo visita foto guía aduana equipaje escala crucero excursión camping recuerdo frontera aeropuerto ruta albergue vacaciones',
+      maison: 'cocina salón dormitorio desván sótano jardín puerta ventana escalera sofá lámpara alfombra cortina estante cajón espejo cojín armario balcón chimenea pasillo techo sillón reloj cuadro',
+      sport: 'fútbol tenis natación carrera ciclismo rugby judo esgrima vela esquí surf golf boxeo baile yoga baloncesto balonmano remo maratón buceo escalada patinaje voleibol kárate triatlón',
+      musique: 'piano guitarra violín flauta batería trompeta arpa canción melodía ritmo concierto orquesta estribillo nota acorde tambor teclado coro ópera partitura bajo saxofón acordeón tempo micrófono',
+      metiers: 'panadero médico bombero cartero piloto jardinero carpintero peluquero librero florista fontanero dentista farmacéutico cocinero pintor albañil pescador veterinario profesor periodista sastre relojero pastor notario chef juez guía monje actor',
+      fruits: 'manzana pera fresa cereza albaricoque melocotón ciruela uva melón limón naranja plátano kiwi mango tomate zanahoria puerro nabo rábano calabacín berenjena pimiento espinaca brócoli calabaza frambuesa',
+      mer: 'ola marea arena concha alga faro barco vela ancla gaviota cangrejo medusa coral arrecife duna espuma puerto muelle acantilado guijarro estrella langosta ostra horizonte isla',
+    } },
+  pt: { title: 'Caça-palavras', daily: 'Desafio do dia', streak: 'Sequência: {n} dia(s)', done: 'Feito hoje ✔', sizes: ['Fácil', 'Normal', 'Difícil'], hint: '💡 Dica ({n})', hintAd: '💡 Dica 🎬', win: 'Muito bem!', time: 'Tempo: {t}', next: 'Próxima grade', home: 'Início', found: '{a}/{b} palavras', level: 'grade {n}',
+    themes: { animaux: ['🐾', 'Animais'], cuisine: ['🍳', 'Cozinha'], nature: ['🌿', 'Natureza'], voyage: ['✈️', 'Viagem'], maison: ['🏠', 'Casa'], sport: ['⚽', 'Esportes'], musique: ['🎵', 'Música'], metiers: ['🧑‍🔧', 'Profissões'], fruits: ['🍓', 'Frutas e legumes'], mer: ['🌊', 'Mar'] },
+    words: {
+      animaux: 'gato cachorro cavalo coelho raposa coruja tartaruga girafa zebra lontra castor golfinho baleia pinguim esquilo ouriço panda coala tigre leão rato pato ovelha cabra abelha borboleta',
+      cuisine: 'farinha manteiga açúcar frigideira forno batedor receita bolo crepe sopa salada torta pão queijo especiarias baunilha canela mostarda omelete biscoito geleia fermento panela concha',
+      nature: 'floresta rio montanha prado flor árvore folha raiz musgo rocha colina vale cachoeira lagoa nuvem chuva sol tempestade névoa orvalho semente broto trilha riacho penhasco',
+      voyage: 'mala bilhete avião trem estação hotel praia mapa passaporte museu visita foto guia alfândega bagagem escala cruzeiro trilha acampamento lembrança fronteira aeroporto roteiro albergue férias',
+      maison: 'cozinha sala quarto sótão porão jardim porta janela escada sofá lâmpada tapete cortina prateleira gaveta espelho almofada armário varanda lareira corredor teto poltrona relógio quadro',
+      sport: 'futebol tênis natação corrida ciclismo rugby judô esgrima vela esqui surfe golfe boxe dança ioga basquete handebol remo maratona mergulho escalada patinação vôlei caratê triatlo',
+      musique: 'piano violão violino flauta bateria trompete harpa canção melodia ritmo concerto orquestra refrão nota acorde tambor teclado coral ópera partitura baixo saxofone acordeão tempo microfone',
+      metiers: 'padeiro médico bombeiro carteiro piloto jardineiro carpinteiro cabeleireiro livreiro florista encanador dentista farmacêutico cozinheiro pintor pedreiro pescador veterinário professor jornalista alfaiate relojoeiro pastor advogado chef juiz guia monge ator cantor mágico padre',
+      fruits: 'maçã pera morango cereja damasco pêssego ameixa uva melão limão laranja banana kiwi manga tomate cenoura alho nabo rabanete abobrinha berinjela pimentão espinafre brócolis abóbora framboesa',
+      mer: 'onda maré areia concha alga farol barco vela âncora gaivota caranguejo polvo coral recife duna espuma porto cais penhasco seixo estrela lagosta ostra horizonte ilha',
+    } },
+  de: { title: 'Wortsuche', daily: 'Tagesrätsel', streak: 'Serie: {n} Tag(e)', done: 'Heute geschafft ✔', sizes: ['Leicht', 'Normal', 'Schwer'], hint: '💡 Tipp ({n})', hintAd: '💡 Tipp 🎬', win: 'Super!', time: 'Zeit: {t}', next: 'Nächstes Rätsel', home: 'Start', found: '{a}/{b} Wörter', level: 'Rätsel {n}',
+    themes: { animaux: ['🐾', 'Tiere'], cuisine: ['🍳', 'Küche'], nature: ['🌿', 'Natur'], voyage: ['✈️', 'Reisen'], maison: ['🏠', 'Zuhause'], sport: ['⚽', 'Sport'], musique: ['🎵', 'Musik'], metiers: ['🧑‍🔧', 'Berufe'], fruits: ['🍓', 'Obst und Gemüse'], mer: ['🌊', 'Meer'] },
+    words: {
+      animaux: 'Katze Hund Pferd Hase Fuchs Eule Schildkröte Giraffe Zebra Otter Biber Delfin Wal Pinguin Eichhörnchen Igel Panda Koala Tiger Löwe Maus Ente Schaf Ziege Biene Schmetterling',
+      cuisine: 'Mehl Butter Zucker Pfanne Ofen Schneebesen Rezept Kuchen Pfannkuchen Suppe Salat Torte Brot Käse Gewürze Vanille Zimt Senf Omelett Keks Marmelade Hefe Topf Kelle Reibe',
+      nature: 'Wald Fluss Berg Wiese Blume Baum Blatt Wurzel Moos Felsen Hügel Tal Wasserfall Teich Wolke Regen Sonne Gewitter Nebel Tau Samen Knospe Pfad Lichtung Bach Klippe',
+      voyage: 'Koffer Ticket Flugzeug Zug Bahnhof Hotel Strand Karte Reisepass Museum Ausflug Foto Reiseführer Zoll Gepäck Kreuzfahrt Wandern Camping Andenken Grenze Flughafen Route Herberge Urlaub',
+      maison: 'Küche Wohnzimmer Schlafzimmer Dachboden Keller Garten Tür Fenster Treppe Sofa Lampe Teppich Vorhang Regal Schublade Spiegel Kissen Schrank Balkon Kamin Flur Decke Sessel Uhr Bild',
+      sport: 'Fußball Tennis Schwimmen Laufen Radfahren Rugby Judo Fechten Segeln Skifahren Surfen Golf Boxen Tanzen Yoga Basketball Handball Rudern Marathon Tauchen Klettern Eislauf Volleyball Karate Triathlon',
+      musique: 'Klavier Gitarre Geige Flöte Schlagzeug Trompete Harfe Lied Melodie Rhythmus Konzert Orchester Refrain Note Akkord Trommel Tastatur Chor Oper Partitur Bass Saxofon Akkordeon Tempo Mikrofon',
+      metiers: 'Bäcker Arzt Feuerwehrmann Briefträger Pilot Gärtner Tischler Friseur Buchhändler Florist Klempner Zahnarzt Apotheker Koch Maler Maurer Fischer Tierarzt Lehrer Journalist Schneider Uhrmacher Hirte Notar Bauer Richter Pfarrer Imker Wirt',
+      fruits: 'Apfel Birne Erdbeere Kirsche Aprikose Pfirsich Pflaume Traube Melone Zitrone Orange Banane Kiwi Mango Tomate Karotte Lauch Rübe Radieschen Zucchini Aubergine Paprika Spinat Brokkoli Kürbis Himbeere',
+      mer: 'Welle Flut Sand Muschel Alge Leuchtturm Boot Segel Anker Möwe Krabbe Qualle Koralle Riff Düne Schaum Hafen Mole Klippe Kiesel Seestern Hummer Auster Horizont Insel',
+    } },
+  it: { title: 'Cerca parole', daily: 'Puzzle del giorno', streak: 'Serie: {n} giorno/i', done: 'Fatto oggi ✔', sizes: ['Facile', 'Normale', 'Difficile'], hint: '💡 Aiuto ({n})', hintAd: '💡 Aiuto 🎬', win: 'Bravo!', time: 'Tempo: {t}', next: 'Griglia successiva', home: 'Home', found: '{a}/{b} parole', level: 'griglia {n}',
+    themes: { animaux: ['🐾', 'Animali'], cuisine: ['🍳', 'Cucina'], nature: ['🌿', 'Natura'], voyage: ['✈️', 'Viaggi'], maison: ['🏠', 'Casa'], sport: ['⚽', 'Sport'], musique: ['🎵', 'Musica'], metiers: ['🧑‍🔧', 'Mestieri'], fruits: ['🍓', 'Frutta e verdura'], mer: ['🌊', 'Mare'] },
+    words: {
+      animaux: 'gatto cane cavallo coniglio volpe gufo tartaruga giraffa zebra lontra castoro delfino balena pinguino scoiattolo riccio panda koala tigre leone topo anatra pecora capra ape farfalla',
+      cuisine: 'farina burro zucchero padella forno frusta ricetta torta crespella zuppa insalata crostata pane formaggio spezie vaniglia cannella senape frittata biscotto marmellata lievito pentola mestolo grattugia',
+      nature: 'foresta fiume montagna prato fiore albero foglia radice muschio roccia collina valle cascata stagno nuvola pioggia sole temporale nebbia rugiada seme germoglio sentiero radura ruscello scogliera',
+      voyage: 'valigia biglietto aereo treno stazione albergo spiaggia mappa passaporto museo visita foto guida dogana bagaglio scalo crociera escursione campeggio ricordo confine aeroporto navetta itinerario ostello vacanze',
+      maison: 'cucina salotto camera soffitta cantina giardino porta finestra scala divano lampada tappeto tenda mensola cassetto specchio cuscino armadio balcone camino corridoio soffitto poltrona orologio quadro',
+      sport: 'calcio tennis nuoto corsa ciclismo rugby judo scherma vela sci surf golf pugilato danza yoga basket pallamano canottaggio maratona immersione arrampicata pattinaggio pallavolo karate triathlon',
+      musique: 'pianoforte chitarra violino flauto batteria tromba arpa canzone melodia ritmo concerto orchestra ritornello nota accordo tamburo tastiera coro opera spartito basso sassofono fisarmonica tempo microfono',
+      metiers: 'fornaio medico pompiere postino pilota giardiniere falegname parrucchiere libraio fioraio idraulico dentista farmacista cuoco pittore muratore pescatore veterinario insegnante giornalista sarto orologiaio pastore notaio chef giudice guida monaco attore',
+      fruits: 'mela pera fragola ciliegia albicocca pesca prugna uva melone limone arancia banana kiwi mango pomodoro carota porro rapa ravanello zucchina melanzana peperone spinaci broccoli zucca lampone',
+      mer: 'onda marea sabbia conchiglia alga faro barca vela ancora gabbiano granchio medusa corallo scoglio duna schiuma porto molo scogliera ciottolo stella aragosta ostrica orizzonte isola',
+    } },
+  ja: { title: 'ことばさがし', daily: '今日のパズル', streak: '連続：{n}日', done: '今日はクリア済み ✔', sizes: ['かんたん', 'ふつう', 'むずかしい'], hint: '💡 ヒント ({n})', hintAd: '💡 ヒント 🎬', win: 'お見事！', time: 'タイム：{t}', next: '次のパズル', home: 'ホーム', found: '{a}/{b} 語', level: 'パズル {n}',
+    themes: { animaux: ['🐾', 'どうぶつ'], cuisine: ['🍳', 'りょうり'], nature: ['🌿', 'しぜん'], voyage: ['✈️', 'りょこう'], maison: ['🏠', 'いえ'], sport: ['⚽', 'スポーツ'], musique: ['🎵', 'おんがく'], metiers: ['🧑‍🔧', 'しごと'], fruits: ['🍓', 'くだものとやさい'], mer: ['🌊', 'うみ'] },
+    words: {
+      animaux: 'ねこ いぬ うま うさぎ きつね ふくろう かめ きりん しまうま らっこ ビーバー イルカ くじら ペンギン りす はりねずみ パンダ コアラ とら ライオン ねずみ あひる ひつじ やぎ みつばち ちょう',
+      cuisine: 'こむぎこ バター さとう フライパン オーブン レシピ ケーキ クレープ スープ サラダ タルト パン チーズ スパイス バニラ シナモン からし オムレツ クッキー ジャム なべ おたま まないた ほうちょう',
+      nature: 'もり かわ やま のはら はな き はっぱ ね こけ いわ おか たに たき いけ くも あめ たいよう あらし きり つゆ たね つぼみ こみち おがわ がけ',
+      voyage: 'スーツケース きっぷ ひこうき でんしゃ えき ホテル すなはま ちず パスポート はくぶつかん しゃしん ガイド にもつ クルーズ ハイキング キャンプ おみやげ こっきょう くうこう ルート やど やすみ たび',
+      maison: 'だいどころ いま しんしつ やねうら ちかしつ にわ ドア まど かいだん ソファ ランプ じゅうたん カーテン たな ひきだし かがみ クッション おしいれ ベランダ だんろ ろうか てんじょう いす とけい え',
+      sport: 'サッカー テニス すいえい ランニング サイクリング ラグビー じゅうどう フェンシング ヨット スキー サーフィン ゴルフ ボクシング ダンス ヨガ バスケ ハンドボール ボート マラソン ダイビング クライミング スケート バレー からて',
+      musique: 'ピアノ ギター バイオリン フルート ドラム トランペット ハープ うた メロディー リズム コンサート オーケストラ サビ おんぷ わおん たいこ けんばん がっしょう オペラ がくふ ベース サックス テンポ マイク',
+      metiers: 'パンや いしゃ しょうぼうし ゆうびんや パイロット にわし だいく びようし ほんや はなや はいかんこう はいしゃ やくざいし コック がか さかなや じゅうい せんせい きしゃ したてや とけいや ひつじかい べんごし かんごし',
+      fruits: 'りんご なし いちご さくらんぼ あんず もも すもも ぶどう メロン レモン オレンジ バナナ キウイ マンゴー トマト にんじん ねぎ かぶ だいこん ズッキーニ なす ピーマン ほうれんそう ブロッコリー かぼちゃ',
+      mer: 'なみ しお すな かいがら かいそう とうだい ふね ほ いかり かもめ かに くらげ さんご いそ さきゅう あわ みなと さんばし がけ こいし ひとで えび かき すいへいせん しま',
+    } },
+  ko: { title: '단어 찾기', daily: '오늘의 퍼즐', streak: '연속: {n}일', done: '오늘 완료 ✔', sizes: ['쉬움', '보통', '어려움'], hint: '💡 힌트 ({n})', hintAd: '💡 힌트 🎬', win: '잘했어요!', time: '시간: {t}', next: '다음 퍼즐', home: '홈', found: '{a}/{b} 단어', level: '퍼즐 {n}',
+    themes: { animaux: ['🐾', '동물'], cuisine: ['🍳', '요리'], nature: ['🌿', '자연'], voyage: ['✈️', '여행'], maison: ['🏠', '집'], sport: ['⚽', '스포츠'], musique: ['🎵', '음악'], metiers: ['🧑‍🔧', '직업'], fruits: ['🍓', '과일과 채소'], mer: ['🌊', '바다'] },
+    words: {
+      animaux: '고양이 강아지 말 토끼 여우 부엉이 거북이 기린 얼룩말 수달 비버 돌고래 고래 펭귄 다람쥐 고슴도치 판다 코알라 호랑이 사자 생쥐 오리 양 염소 꿀벌 나비',
+      cuisine: '밀가루 버터 설탕 프라이팬 오븐 거품기 요리법 케이크 크레이프 수프 샐러드 타르트 빵 치즈 향신료 바닐라 계피 겨자 오믈렛 과자 잼 효모 냄비 국자 도마',
+      nature: '숲 강 산 초원 꽃 나무 나뭇잎 뿌리 이끼 바위 언덕 계곡 폭포 연못 구름 비 태양 폭풍 안개 이슬 씨앗 새싹 오솔길 시냇물 절벽',
+      voyage: '여행가방 기차표 비행기 기차 기차역 호텔 해변 지도 여권 박물관 관광 사진 안내원 세관 짐 유람선 등산 캠핑 기념품 국경 공항 셔틀 여정 숙소 휴가',
+      maison: '부엌 거실 침실 다락방 지하실 정원 문 창문 계단 소파 램프 양탄자 커튼 선반 서랍 거울 쿠션 옷장 발코니 벽난로 복도 천장 안락의자 시계 그림',
+      sport: '축구 테니스 수영 달리기 자전거 럭비 유도 펜싱 요트 스키 서핑 골프 권투 춤 요가 농구 핸드볼 조정 마라톤 다이빙 암벽등반 스케이트 배구 가라테 철인경기',
+      musique: '피아노 기타 바이올린 플루트 드럼 트럼펫 하프 노래 멜로디 리듬 콘서트 오케스트라 후렴 음표 화음 북 건반 합창단 오페라 악보 베이스 색소폰 아코디언 템포 마이크',
+      metiers: '제빵사 의사 소방관 집배원 조종사 정원사 목수 미용사 서점주인 꽃집주인 배관공 치과의사 약사 요리사 화가 미장이 어부 수의사 선생님 기자 재단사 시계공 양치기 변호사',
+      fruits: '사과 배 딸기 체리 살구 복숭아 자두 포도 멜론 레몬 오렌지 바나나 키위 망고 토마토 당근 대파 순무 무 애호박 가지 피망 시금치 브로콜리 호박 산딸기',
+      mer: '파도 밀물 모래 조개껍데기 해초 등대 배 돛 닻 갈매기 게 해파리 산호 암초 모래언덕 물거품 항구 부두 절벽 조약돌 불가사리 바닷가재 굴 수평선 섬',
+    } },
+  tr: { title: 'Kelime avı', daily: 'Günün bulmacası', streak: 'Seri: {n} gün', done: 'Bugün tamamlandı ✔', sizes: ['Kolay', 'Normal', 'Zor'], hint: '💡 İpucu ({n})', hintAd: '💡 İpucu 🎬', win: 'Harika!', time: 'Süre: {t}', next: 'Sonraki bulmaca', home: 'Ana sayfa', found: '{a}/{b} kelime', level: 'bulmaca {n}',
+    themes: { animaux: ['🐾', 'Hayvanlar'], cuisine: ['🍳', 'Mutfak'], nature: ['🌿', 'Doğa'], voyage: ['✈️', 'Seyahat'], maison: ['🏠', 'Ev'], sport: ['⚽', 'Spor'], musique: ['🎵', 'Müzik'], metiers: ['🧑‍🔧', 'Meslekler'], fruits: ['🍓', 'Meyve ve sebze'], mer: ['🌊', 'Deniz'] },
+    words: {
+      animaux: 'kedi köpek at tavşan tilki baykuş kaplumbağa zürafa zebra susamuru kunduz yunus balina penguen sincap kirpi panda koala kaplan aslan fare ördek koyun keçi arı kelebek',
+      cuisine: 'un tereyağı şeker tava fırın çırpıcı tarif pasta krep çorba salata turta ekmek peynir baharat vanilya tarçın hardal omlet bisküvi reçel maya tencere kepçe rende',
+      nature: 'orman nehir dağ çayır çiçek ağaç yaprak kök yosun kaya tepe vadi şelale gölet bulut yağmur güneş fırtına sis çiy tohum tomurcuk patika açıklık dere uçurum',
+      voyage: 'bavul bilet uçak tren istasyon otel plaj harita pasaport müze gezi fotoğraf rehber gümrük bagaj aktarma yolculuk yürüyüş kamp hatıra sınır havalimanı rota pansiyon tatil',
+      maison: 'mutfak salon yatak çatı bodrum bahçe kapı pencere merdiven kanepe lamba halı perde raf çekmece ayna yastık dolap balkon şömine koridor tavan koltuk saat tablo',
+      sport: 'futbol tenis yüzme koşu bisiklet ragbi judo eskrim yelken kayak sörf golf boks dans yoga basketbol hentbol kürek maraton dalış tırmanış paten voleybol karate triatlon',
+      musique: 'piyano gitar keman flüt davul trompet arp şarkı melodi ritim konser orkestra nakarat nota akor tef klavye koro opera partisyon bas saksafon akordeon tempo mikrofon',
+      metiers: 'fırıncı doktor itfaiyeci postacı pilot bahçıvan marangoz kuaför kitapçı çiçekçi tesisatçı dişçi eczacı aşçı ressam duvarcı balıkçı veteriner öğretmen gazeteci terzi saatçi çoban avukat',
+      fruits: 'elma armut çilek kiraz kayısı şeftali erik üzüm kavun limon portakal muz kivi mango domates havuç pırasa şalgam turp kabak patlıcan biber ıspanak brokoli balkabağı ahududu',
+      mer: 'dalga gelgit kum midye yosun fener tekne yelken çapa martı yengeç denizanası mercan resif kumul köpük liman iskele uçurum çakıl denizyıldızı ıstakoz istiridye ufuk ada',
+    } },
+  pl: { title: 'Wykreślanka', daily: 'Zagadka dnia', streak: 'Seria: {n} dni', done: 'Dziś ukończone ✔', sizes: ['Łatwy', 'Normalny', 'Trudny'], hint: '💡 Podpowiedź ({n})', hintAd: '💡 Podpowiedź 🎬', win: 'Brawo!', time: 'Czas: {t}', next: 'Następna zagadka', home: 'Start', found: '{a}/{b} słów', level: 'zagadka {n}',
+    themes: { animaux: ['🐾', 'Zwierzęta'], cuisine: ['🍳', 'Kuchnia'], nature: ['🌿', 'Przyroda'], voyage: ['✈️', 'Podróże'], maison: ['🏠', 'Dom'], sport: ['⚽', 'Sport'], musique: ['🎵', 'Muzyka'], metiers: ['🧑‍🔧', 'Zawody'], fruits: ['🍓', 'Owoce i warzywa'], mer: ['🌊', 'Morze'] },
+    words: {
+      animaux: 'kot pies koń królik lis sowa żółw żyrafa zebra wydra bóbr delfin wieloryb pingwin wiewiórka jeż panda koala tygrys lew mysz kaczka owca koza pszczoła motyl',
+      cuisine: 'mąka masło cukier patelnia piekarnik trzepaczka przepis ciasto naleśnik zupa sałatka tarta chleb ser przyprawy wanilia cynamon musztarda omlet herbatnik dżem drożdże garnek chochla tarka',
+      nature: 'las rzeka góra łąka kwiat drzewo liść korzeń mech skała wzgórze dolina wodospad staw chmura deszcz słońce burza mgła rosa nasiono pąk ścieżka polana strumień klif',
+      voyage: 'walizka bilet samolot pociąg dworzec hotel plaża mapa paszport muzeum wycieczka zdjęcie przewodnik cło bagaż przesiadka rejs wędrówka biwak pamiątka granica lotnisko trasa schronisko wakacje',
+      maison: 'kuchnia salon sypialnia strych piwnica ogród drzwi okno schody kanapa lampa dywan zasłona półka szuflada lustro poduszka szafa balkon kominek korytarz sufit fotel zegar obraz',
+      sport: 'piłka tenis pływanie bieganie kolarstwo rugby judo szermierka żeglarstwo narciarstwo surfing golf boks taniec joga koszykówka hokej wioślarstwo maraton nurkowanie wspinaczka łyżwiarstwo siatkówka karate triatlon',
+      musique: 'fortepian gitara skrzypce flet perkusja trąbka harfa piosenka melodia rytm koncert orkiestra refren nuta akord bęben klawiatura chór opera partytura bas saksofon akordeon tempo mikrofon',
+      metiers: 'piekarz lekarz strażak listonosz pilot ogrodnik stolarz fryzjer księgarz kwiaciarz hydraulik dentysta farmaceuta kucharz malarz murarz rybak weterynarz nauczyciel dziennikarz krawiec zegarmistrz pasterz notariusz sędzia rolnik aktor mnich kelner kowal szewc górnik',
+      fruits: 'jabłko gruszka truskawka wiśnia morela brzoskwinia śliwka winogrono melon cytryna pomarańcza banan kiwi mango pomidor marchew por rzepa rzodkiewka cukinia bakłażan papryka szpinak brokuł dynia malina',
+      mer: 'fala przypływ piasek muszla glon latarnia łódź żagiel kotwica mewa krab meduza koral rafa wydma piana port molo klif kamyk rozgwiazda homar ostryga horyzont wyspa',
+    } },
 };
-let lang = (navigator.language || 'en').startsWith('fr') ? 'fr' : 'en';
+const LANGS = ['fr', 'en', 'es', 'pt', 'de', 'it', 'ja', 'ko', 'tr', 'pl'], NAV = (navigator.language || 'en').slice(0, 2).toLowerCase();
+let lang = LANGS.includes(NAV) ? NAV : 'en';
 const KEY = 'motsmeles.save.v1';
 let S = { lang: null, muted: false, size: 1, levels: {}, daily: '', streak: 0, hints: 3, hintDay: '', plays: 0 };
 try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
 const save = () => { try { S.cur = G && !G.words.every(w => w.found) ? Object.assign({}, G, { el: Date.now() - t0 }) : null; localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
-if (S.lang) lang = S.lang;
+if (S.lang && L[S.lang]) lang = S.lang;
 const T = () => L[lang], fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]), $ = id => document.getElementById(id);
 const today = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 const yesterday = () => { const d = new Date(Date.now() - 864e5); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
@@ -107,18 +221,22 @@ let ac = null; function beep(f, d = 0.09, type = 'triangle', v = 0.12, at = 0) {
 // ---------- puzzle generation (seeded) ----------
 function rng(seed) { let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
 const hash = str => { let h = 2166136261; for (const c of str) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
-const plain = w => w.normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z]/g, '');
+const CJK = () => lang === 'ja' || lang === 'ko';   // kana / hangul: each character is one cell, no accent folding
+const plain = w => CJK() ? [...w.normalize('NFC')].filter(c => /[぀-ヿ가-힯]/.test(c)).join('')
+  : w.replace(/ß/g, 'ss').replace(/[łŁ]/g, 'l').replace(/ı/g, 'i').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/[^A-Z]/g, '');
 const SIZES = [{ n: 8, words: 7, dirs: [[1, 0], [0, 1]] }, { n: 10, words: 10, dirs: [[1, 0], [0, 1], [1, 1], [1, -1]] }, { n: 12, words: 14, dirs: [[1, 0], [0, 1], [1, 1], [1, -1], [-1, 0], [0, -1], [-1, -1], [-1, 1]] }];
-const FREQ = { fr: 'EEEEEEEAAAAIIIISSSSNNNNRRRRTTTTOOOLLLUUUDDCCMMPPGBVHFQYXJKWZ', en: 'EEEEEEETTTTAAAAOOOIIINNNSSSHHRRRDDLLCUUMWFGYPBVKJXQZ' };
+const FREQ = { fr: 'EEEEEEEAAAAIIIISSSSNNNNRRRRTTTTOOOLLLUUUDDCCMMPPGBVHFQYXJKWZ', en: 'EEEEEEETTTTAAAAOOOIIINNNSSSHHRRRDDLLCUUMWFGYPBVKJXQZ',
+  es: 'EEEEEEAAAAAAOOOOOSSSSRRRRNNNNIIIIDDDLLLCCCTTTUUUMMPPBGVYQHFZJXK', pt: 'AAAAAAEEEEEEOOOOOSSSSRRRRIIIINNNDDDMMMUUUTTTCCCLLPPVGHQBFZJX', de: 'EEEEEEENNNNNIIIISSSSRRRRAAAATTTTDDDHHHUUULLLCCGGMMOOBBWFKZPVJY',
+  it: 'EEEEEAAAAAIIIIIOOOOONNNNLLLLRRRRTTTTSSSCCCDDPPUUMMVVGGHFBZQ', tr: 'AAAAAAEEEEEIIIIIINNNNRRRRLLLLKKKDDDMMMUUUYYYTTSSSBBOOZZGGCCHHPVF', pl: 'IIIIIIAAAAAAEEEEEOOOOOZZZZNNNNRRRRWWWSSSCCCTTTKKKYYYDDPPMMUJJLLBGH' };
 function make(theme, size, seed) {
-  const R = rng(seed), cfg = SIZES[size], n = cfg.n, pool = T().words[theme].split(' ').filter(w => plain(w).length <= n && plain(w).length >= 3);
+  const R = rng(seed), cfg = SIZES[size], n = cfg.n, pool = T().words[theme].split(' ').filter(w => plain(w).length <= n && plain(w).length >= (CJK() ? 2 : 3));
   for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(R() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
   const g = Array.from({ length: n }, () => Array(n).fill('')), placed = [];
   for (const w of pool) { if (placed.length >= cfg.words) break; const p = plain(w); let ok = false; if (placed.some(o => o.p.includes(p) || p.includes(o.p))) continue;
     for (let tries = 0; tries < 120 && !ok; tries++) { const [dx, dy] = cfg.dirs[Math.floor(R() * cfg.dirs.length)], x0 = Math.floor(R() * n), y0 = Math.floor(R() * n), x1 = x0 + dx * (p.length - 1), y1 = y0 + dy * (p.length - 1);
       if (x1 < 0 || x1 >= n || y1 < 0 || y1 >= n) continue; let fit = true; for (let k = 0; k < p.length; k++) { const c = g[y0 + dy * k][x0 + dx * k]; if (c && c !== p[k]) { fit = false; break; } }
       if (!fit) continue; for (let k = 0; k < p.length; k++) g[y0 + dy * k][x0 + dx * k] = p[k]; placed.push({ w, p, x0, y0, x1, y1, found: false }); ok = true; } }
-  const f = FREQ[lang]; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!g[y][x]) g[y][x] = f[Math.floor(R() * f.length)];
+  const f = CJK() ? [...T().words[theme].split(' ').map(plain).join('')] : FREQ[lang]; for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (!g[y][x]) g[y][x] = f[Math.floor(R() * f.length)];
   return { n, g, words: placed };
 }
 
@@ -178,7 +296,7 @@ $('home2').onclick = () => home();
 // ---------- home ----------
 function home() {
   G = null; S.cur = null; save(); clearInterval(tick); $('win').hidden = true; $('game').hidden = true; $('home').hidden = false; $('back').hidden = true; const t = T(); document.title = t.title; document.documentElement.lang = lang;
-  $('ttl').textContent = t.title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; $('snd').textContent = S.muted ? '🔇' : '🔊';
+  $('ttl').textContent = t.title; $('lang').textContent = '🌐 ' + lang.toUpperCase(); $('langSel').value = lang; $('snd').textContent = S.muted ? '🔇' : '🔊';
   $('dT').textContent = '📅 ' + t.daily; $('dS').textContent = (S.daily === today() ? t.done + ' · ' : '') + fmt(t.streak, { n: S.daily === today() || S.daily === yesterday() ? S.streak : 0 });
   $('sizes').innerHTML = t.sizes.map((s, i) => `<button class="pill ${i === S.size ? 'on' : ''}" data-s="${i}">${s}</button>`).join('');
   $('themes').innerHTML = Object.entries(t.themes).map(([k, v]) => `<button class="theme" data-t="${k}"><span>${v[0]}</span>${v[1]}<br><small>${fmt(t.level, { n: (S.levels[k + S.size] || 0) + 1 })}</small></button>`).join('');
@@ -187,9 +305,9 @@ $('sizes').onclick = e => { const b = e.target.closest('[data-s]'); if (b) { S.s
 $('themes').onclick = e => { const b = e.target.closest('[data-t]'); if (b) start(b.dataset.t, false); };
 $('daily').onclick = () => { if (S.daily === today()) { $('dS').textContent = T().done + ' · ' + fmt(T().streak, { n: S.streak }); beep(330, 0.1); return; } start(null, true); };
 $('back').onclick = home;
-$('lang').onclick = () => { lang = lang === 'fr' ? 'en' : 'fr'; S.lang = lang; save(); home(); };
+$('langSel').onchange = e => { lang = e.target.value; S.lang = lang; save(); home(); };
 $('snd').onclick = () => { S.muted = !S.muted; save(); home(); };
-if (S.cur && S.cur.g) { G = S.cur; t0 = Date.now() - (S.cur.el || 0); $('home').hidden = true; $('game').hidden = false; $('back').hidden = false; $('ttl').textContent = T().title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; draw(); tick = setInterval(clockTick, 500); } else home();
+if (S.cur && S.cur.g) { G = S.cur; t0 = Date.now() - (S.cur.el || 0); $('home').hidden = true; $('game').hidden = false; $('back').hidden = false; $('ttl').textContent = T().title; $('lang').textContent = '🌐 ' + lang.toUpperCase(); $('langSel').value = lang; draw(); tick = setInterval(clockTick, 500); } else home();
 window.MM = { get G() { return G; }, S, start, win, endSel: () => endSel(), setSel: s => { sel = s; } }; // debug hook for automated tests
 </script>
 </body>

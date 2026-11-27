@@ -43,6 +43,7 @@
   .alt{background:var(--card);color:var(--ink);box-shadow:0 3px 0 var(--edge)}
   [hidden]{display:none!important}
   .langp{position:relative;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.langp select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer}
+  .noads{margin:16px auto 4px;text-align:center;max-width:340px;width:100%}.noads .na-buy{border:0;border-radius:999px;min-height:44px;padding:10px 20px;font:inherit;font-weight:800;background:rgba(40,28,18,.85);color:#fff;cursor:pointer}.noads small{display:block;opacity:.75;margin:6px 0 0;font-size:13px}.noads .na-link{background:none;border:0;color:inherit;text-decoration:underline;font:inherit;font-size:14px;min-height:44px;padding:8px 14px;cursor:pointer}.noads .na-ok{margin:6px 0;font-weight:700}
 </style>
 </head>
 <body>
@@ -116,7 +117,29 @@ const T = () => L[lang], fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k])
 const dayKey = ms => { const d = new Date(ms); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 if (S.hintDay !== dayKey(Date.now())) { S.hintDay = dayKey(Date.now()); S.hints = Math.max(S.hints, 3); }
 const ADS = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.ads;
-const ad = kind => ADS ? Promise.resolve().then(() => ADS.postMessage({ op: kind })).then(ok => !!ok, () => false) : Promise.resolve(false);
+const ad = kind => kind === 'interstitial' && S.noads ? Promise.resolve(false) : ADS ? Promise.resolve().then(() => ADS.postMessage({ op: kind })).then(ok => !!ok, () => false) : Promise.resolve(false);
+
+// ---------- 'Sans pub' in-app purchase (StoreKit bridge of the iOS shell). No bridge = no shop row ----------
+const STORE = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.store, NOADS_ID = "com.zvisionclub.logimages.noads";
+const NA = {"fr": {"t": "Sans pub", "d": "Retire les publicités entre les grilles", "r": "Restaurer mes achats", "ok": "Merci ! Les pubs sont retirées.", "ro": "Achats restaurés"}, "en": {"t": "No ads", "d": "Removes ads between grids", "r": "Restore purchases", "ok": "Thank you! Ads are removed.", "ro": "Purchases restored"}, "es": {"t": "Sin anuncios", "d": "Quita los anuncios entre tableros", "r": "Restaurar compras", "ok": "¡Gracias! Anuncios eliminados.", "ro": "Compras restauradas"}, "pt": {"t": "Sem anúncios", "d": "Remove os anúncios entre os jogos", "r": "Restaurar compras", "ok": "Obrigado! Anúncios removidos.", "ro": "Compras restauradas"}, "de": {"t": "Ohne Werbung", "d": "Entfernt die Werbung zwischen Rätseln", "r": "Käufe wiederherstellen", "ok": "Danke! Werbung entfernt.", "ro": "Käufe wiederhergestellt"}, "it": {"t": "Senza pubblicità", "d": "Rimuove la pubblicità tra le griglie", "r": "Ripristina acquisti", "ok": "Grazie! Pubblicità rimossa.", "ro": "Acquisti ripristinati"}, "ja": {"t": "広告なし", "d": "問題の合間の広告を削除します", "r": "購入を復元", "ok": "ありがとうございます！広告を削除しました。", "ro": "購入を復元しました"}, "ko": {"t": "광고 제거", "d": "퍼즐 사이 광고를 없앱니다", "r": "구매 복원", "ok": "감사합니다! 광고가 제거되었어요.", "ro": "구매가 복원되었어요"}, "tr": {"t": "Reklamsız", "d": "Bulmacalar arasındaki reklamları kaldırır", "r": "Satın alımları geri yükle", "ok": "Teşekkürler! Reklamlar kaldırıldı.", "ro": "Satın alımlar geri yüklendi"}, "pl": {"t": "Bez reklam", "d": "Usuwa reklamy między planszami", "r": "Przywróć zakupy", "ok": "Dziękujemy! Reklamy usunięte.", "ro": "Zakupy przywrócone"}};
+let naPrice = '2,99 €', naBusy = false;
+const storeCall = m => Promise.resolve().then(() => STORE.postMessage(m));
+const grantNoads = () => { if (!S.noads) { S.noads = true; save(); } noadsBox(); };
+function noadsBox(msg) {
+  const b = document.getElementById('noadsBox'); if (!b) return; b.hidden = !STORE; if (!STORE) return; const x = NA[lang] || NA.en;
+  b.innerHTML = (msg ? '<p class="na-ok">' + msg + '</p>' : '') + (S.noads ? (msg ? '' : '<p class="na-ok">✓ ' + x.t + '</p>') : '<button class="na-buy">🚫 ' + x.t + ' · ' + naPrice + '</button><small>' + x.d + '</small>');
+  const buy = b.querySelector('.na-buy'); if (buy) buy.onclick = async () => { if (naBusy) return; naBusy = true; try { const r = await storeCall({ op: 'buy', id: NOADS_ID }); if (r && r.ok) { S.noads = true; save(); noadsBox(x.ok); } } catch (e) {} naBusy = false; };
+  const rs = document.createElement('button'); rs.className = 'na-link'; rs.textContent = x.r; b.appendChild(rs);
+  rs.onclick = async () => { try { const ids = await storeCall({ op: 'restore' }); if ((ids || []).includes(NOADS_ID)) { S.noads = true; save(); } noadsBox(x.ro); } catch (e) {} };
+}
+{ const nb = document.createElement('div'); nb.id = 'noadsBox'; nb.className = 'noads'; nb.hidden = true; (document.getElementById('home')).appendChild(nb); }
+if (STORE) {
+  window.nativeStoreUpdate = id => { if (id === NOADS_ID) grantNoads(); };
+  storeCall({ op: 'owned' }).then(ids => { if ((ids || []).includes(NOADS_ID)) grantNoads(); }).catch(() => {});
+  storeCall({ op: 'drain' }).then(ids => { if ((ids || []).includes(NOADS_ID)) grantNoads(); }).catch(() => {});
+  storeCall({ op: 'products', ids: [NOADS_ID] }).then(l => { if (l && l[0]) { naPrice = l[0].price; noadsBox(); } }).catch(() => {});
+}
+noadsBox();
 if (ADS) try { ADS.postMessage({ op: 'init' }); } catch (e) {}
 let ac = null; function beep(f, d = 0.07, v = 0.1, at = 0) { if (S.muted) return; try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + at; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + d + 0.02); } catch (e) {} }
 function rng(seed) { let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
@@ -222,7 +245,7 @@ function home() {
 }
 $('packs').onclick = e => { const b = e.target.closest('[data-n]'); if (b) start(+b.dataset.n, false); };
 $('daily').onclick = () => start(10, true); $('back').onclick = home;
-$('langSel').onchange = e => { lang = e.target.value; S.lang = lang; save(); G ? paint() : home(); if (G) { $('ttl').textContent = T().title; $('lang').textContent = '🌐 ' + lang.toUpperCase(); $('langSel').value = lang; } };
+$('langSel').onchange = e => { lang = e.target.value; S.lang = lang; noadsBox(); save(); G ? paint() : home(); if (G) { $('ttl').textContent = T().title; $('lang').textContent = '🌐 ' + lang.toUpperCase(); $('langSel').value = lang; } };
 $('snd').onclick = () => { S.muted = !S.muted; save(); $('snd').textContent = S.muted ? '🔇' : '🔊'; };
 addEventListener('resize', () => { if (G) { build(); paint(); } });
 if (S.cur && S.cur.sol) { G = S.cur; $('home').hidden = true; $('game').hidden = false; $('back').hidden = false; requestAnimationFrame(() => { build(); paint(); }); $('ttl').textContent = T().title; $('lang').textContent = '🌐 ' + lang.toUpperCase(); $('langSel').value = lang; $('snd').textContent = S.muted ? '🔇' : '🔊'; } else home();

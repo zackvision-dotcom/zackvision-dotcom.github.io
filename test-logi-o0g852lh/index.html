@@ -42,11 +42,12 @@
   .cta{background:var(--accent);color:#fff;border-radius:16px;padding:13px 16px;font-weight:900;font-size:16px;width:100%;margin-top:10px;box-shadow:0 4px 0 #a8431f}
   .alt{background:var(--card);color:var(--ink);box-shadow:0 3px 0 var(--edge)}
   [hidden]{display:none!important}
+  .langp{position:relative;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.langp select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer}
 </style>
 </head>
 <body>
 <div id="app">
-  <header><button id="back" class="pill" hidden>←</button><h1 id="ttl"></h1><div style="display:flex;gap:6px"><button id="lang" class="pill"></button><button id="snd" class="pill">🔊</button></div></header>
+  <header><button id="back" class="pill" hidden>←</button><h1 id="ttl"></h1><div style="display:flex;gap:6px"><label class="pill langp"><span id="lang"></span><select id="langSel" aria-label="Language"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="it">Italiano</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="tr">Türkçe</option><option value="pl">Polski</option></select></label><button id="snd" class="pill">🔊</button></div></header>
   <div id="home" class="screen">
     <button id="daily" class="daily"><b id="dT"></b><small id="dS"></small></button>
     <div class="packs" id="packs"></div>
@@ -68,6 +69,30 @@ const L = {
   en: { title: 'Nonogram', daily: '📅 Daily puzzle', streak: 'Streak: {n} day(s)', done: 'Done today ✔ · ', packs: ['Beginner 5×5', 'Classic 10×10', 'Expert 12×12'], level: 'puzzle {n}', hint: '💡 ({n})', hintAd: '💡 🎬', win: 'Well done!', lose: 'Out of lives…', its: 'It was: {x}', next: 'Next puzzle', again: 'Try again', cont: '🎬 Continue (+1 life)', home: 'Home',
     how: 'The numbers tell you the groups of cells to fill in each row and column, in order. ■ to fill, ✕ to mark an empty cell. 3 mistakes and it\'s over!',
     names: { heart: 'a heart', house: 'a house', tree: 'a fir tree', mushroom: 'a mushroom', fish: 'a fish', star: 'a star', boat: 'a sailboat', diamond: 'a diamond', smile: 'a smile', arrow: 'an arrow', cross: 'a cross', cup: 'a cup', rnd: 'a mystery pattern' } },
+  es: { title: 'Nonogramas', daily: '📅 Puzle del día', streak: 'Racha: {n} día(s)', done: 'Hecho hoy ✔ · ', packs: ['Principiante 5×5', 'Clásico 10×10', 'Experto 12×12'], level: 'puzle {n}', hint: '💡 ({n})', hintAd: '💡 🎬', win: '¡Bien hecho!', lose: 'Sin vidas…', its: 'Era: {x}', next: 'Siguiente puzle', again: 'Reintentar', cont: '🎬 Continuar (+1 vida)', home: 'Inicio',
+    how: 'Los números indican los grupos de casillas que hay que rellenar en cada fila y columna, en orden. ■ para rellenar, ✕ para marcar una casilla vacía. ¡3 errores y se acabó!',
+    names: { heart: 'un corazón', house: 'una casa', tree: 'un abeto', mushroom: 'una seta', fish: 'un pez', star: 'una estrella', boat: 'un velero', diamond: 'un rombo', smile: 'una sonrisa', arrow: 'una flecha', cross: 'una cruz', cup: 'una taza', rnd: 'un dibujo misterioso' } },
+  pt: { title: 'Nonogramas', daily: '📅 Desafio do dia', streak: 'Sequência: {n} dia(s)', done: 'Feito hoje ✔ · ', packs: ['Iniciante 5×5', 'Clássico 10×10', 'Especialista 12×12'], level: 'grade {n}', hint: '💡 ({n})', hintAd: '💡 🎬', win: 'Muito bem!', lose: 'Sem vidas…', its: 'Era: {x}', next: 'Próxima grade', again: 'Tentar de novo', cont: '🎬 Continuar (+1 vida)', home: 'Início',
+    how: 'Os números indicam os grupos de casas a pintar em cada linha e coluna, em ordem. ■ para pintar, ✕ para marcar uma casa vazia. 3 erros e acabou!',
+    names: { heart: 'um coração', house: 'uma casa', tree: 'um pinheiro', mushroom: 'um cogumelo', fish: 'um peixe', star: 'uma estrela', boat: 'um veleiro', diamond: 'um losango', smile: 'um sorriso', arrow: 'uma seta', cross: 'uma cruz', cup: 'uma xícara', rnd: 'um desenho misterioso' } },
+  de: { title: 'Nonogramm', daily: '📅 Tagesrätsel', streak: 'Serie: {n} Tag(e)', done: 'Heute geschafft ✔ · ', packs: ['Anfänger 5×5', 'Klassisch 10×10', 'Experte 12×12'], level: 'Rätsel {n}', hint: '💡 ({n})', hintAd: '💡 🎬', win: 'Super!', lose: 'Keine Leben mehr…', its: 'Es war: {x}', next: 'Nächstes Rätsel', again: 'Nochmal', cont: '🎬 Weiter (+1 Leben)', home: 'Start',
+    how: 'Die Zahlen geben die Gruppen der Felder an, die in jeder Zeile und Spalte gefüllt werden, in dieser Reihenfolge. ■ zum Füllen, ✕ um ein leeres Feld zu markieren. 3 Fehler und es ist vorbei!',
+    names: { heart: 'ein Herz', house: 'ein Haus', tree: 'eine Tanne', mushroom: 'ein Pilz', fish: 'ein Fisch', star: 'ein Stern', boat: 'ein Segelboot', diamond: 'eine Raute', smile: 'ein Lächeln', arrow: 'ein Pfeil', cross: 'ein Kreuz', cup: 'eine Tasse', rnd: 'ein geheimnisvolles Muster' } },
+  it: { title: 'Nonogrammi', daily: '📅 Puzzle del giorno', streak: 'Serie: {n} giorno/i', done: 'Fatto oggi ✔ · ', packs: ['Principiante 5×5', 'Classico 10×10', 'Esperto 12×12'], level: 'griglia {n}', hint: '💡 ({n})', hintAd: '💡 🎬', win: 'Bravo!', lose: 'Vite finite…', its: 'Era: {x}', next: 'Griglia successiva', again: 'Riprova', cont: '🎬 Continua (+1 vita)', home: 'Home',
+    how: 'I numeri indicano i gruppi di caselle da annerire in ogni riga e colonna, in ordine. ■ per annerire, ✕ per segnare una casella vuota. 3 errori e hai perso!',
+    names: { heart: 'un cuore', house: 'una casa', tree: 'un abete', mushroom: 'un fungo', fish: 'un pesce', star: 'una stella', boat: 'una barca a vela', diamond: 'un rombo', smile: 'un sorriso', arrow: 'una freccia', cross: 'una croce', cup: 'una tazza', rnd: 'un disegno misterioso' } },
+  ja: { title: 'お絵かきロジック', daily: '📅 今日のパズル', streak: '連続：{n}日', done: '今日はクリア済み ✔ · ', packs: ['初級 5×5', '中級 10×10', '上級 12×12'], level: 'パズル {n}', hint: '💡 ({n})', hintAd: '💡 🎬', win: 'お見事！', lose: 'ライフがなくなりました…', its: '正解は：{x}', next: '次のパズル', again: 'もう一度', cont: '🎬 続ける (+1ライフ)', home: 'ホーム',
+    how: '数字は、各行・各列で塗りつぶすマスのまとまりを順番に示しています。■で塗る、✕で空白のマスに印をつけます。3回まちがえるとゲームオーバー！',
+    names: { heart: 'ハート', house: '家', tree: 'もみの木', mushroom: 'きのこ', fish: '魚', star: '星', boat: 'ヨット', diamond: 'ひし形', smile: '笑顔', arrow: '矢印', cross: 'バツ印', cup: 'カップ', rnd: 'なぞの模様' } },
+  ko: { title: '노노그램', daily: '📅 오늘의 퍼즐', streak: '연속: {n}일', done: '오늘 완료 ✔ · ', packs: ['초급 5×5', '중급 10×10', '고급 12×12'], level: '퍼즐 {n}', hint: '💡 ({n})', hintAd: '💡 🎬', win: '잘했어요!', lose: '목숨이 없어요…', its: '정답: {x}', next: '다음 퍼즐', again: '다시 하기', cont: '🎬 계속하기 (+1 목숨)', home: '홈',
+    how: '숫자는 각 행과 열에서 칠해야 할 칸의 묶음을 순서대로 알려 줍니다. ■로 칠하고, ✕로 빈칸을 표시하세요. 3번 틀리면 끝!',
+    names: { heart: '하트', house: '집', tree: '전나무', mushroom: '버섯', fish: '물고기', star: '별', boat: '돛단배', diamond: '마름모', smile: '웃는 얼굴', arrow: '화살표', cross: '엑스 표시', cup: '컵', rnd: '수수께끼 무늬' } },
+  tr: { title: 'Nonogram', daily: '📅 Günün bulmacası', streak: 'Seri: {n} gün', done: 'Bugün tamamlandı ✔ · ', packs: ['Başlangıç 5×5', 'Klasik 10×10', 'Uzman 12×12'], level: 'bulmaca {n}', hint: '💡 ({n})', hintAd: '💡 🎬', win: 'Harika!', lose: 'Canın kalmadı…', its: 'Cevap: {x}', next: 'Sonraki bulmaca', again: 'Tekrar dene', cont: '🎬 Devam et (+1 can)', home: 'Ana sayfa',
+    how: 'Sayılar, her satır ve sütunda boyanacak kare gruplarını sırayla gösterir. Boyamak için ■, boş kareyi işaretlemek için ✕. 3 hata yaparsan oyun biter!',
+    names: { heart: 'bir kalp', house: 'bir ev', tree: 'bir çam ağacı', mushroom: 'bir mantar', fish: 'bir balık', star: 'bir yıldız', boat: 'bir yelkenli', diamond: 'bir eşkenar dörtgen', smile: 'bir gülümseme', arrow: 'bir ok', cross: 'bir çarpı', cup: 'bir fincan', rnd: 'gizemli bir desen' } },
+  pl: { title: 'Obrazki logiczne', daily: '📅 Zagadka dnia', streak: 'Seria: {n} dni', done: 'Dziś ukończone ✔ · ', packs: ['Początkujący 5×5', 'Klasyczny 10×10', 'Ekspert 12×12'], level: 'zagadka {n}', hint: '💡 ({n})', hintAd: '💡 🎬', win: 'Brawo!', lose: 'Brak żyć…', its: 'To był(a): {x}', next: 'Następna zagadka', again: 'Spróbuj ponownie', cont: '🎬 Kontynuuj (+1 życie)', home: 'Start',
+    how: 'Liczby pokazują grupy pól do zamalowania w każdym wierszu i kolumnie, po kolei. ■ aby zamalować, ✕ aby oznaczyć puste pole. 3 błędy i koniec!',
+    names: { heart: 'serce', house: 'dom', tree: 'choinka', mushroom: 'grzyb', fish: 'ryba', star: 'gwiazda', boat: 'żaglówka', diamond: 'romb', smile: 'uśmiech', arrow: 'strzałka', cross: 'krzyżyk', cup: 'filiżanka', rnd: 'tajemniczy wzór' } },
 };
 const ART = {
   5: [['diamond', '..#..,.###.,#####,.###.,..#..'], ['heart', '.#.#.,#####,#####,.###.,..#..'], ['smile', '.#.#.,.#.#.,.....,#...#,.###.'], ['arrow', '..#..,.###.,#.#.#,..#..,..#..'], ['house', '..#..,.###.,#####,#.#.#,#.###'], ['cross', '#...#,.#.#.,..#..,.#.#.,#...#'], ['tree', '..#..,.###.,#####,..#..,.###.'], ['cup', '####.,#####,####.,####.,.##..']],
@@ -80,12 +105,13 @@ const ART = {
        ['boat', '....#.....,....##....,....###...,....####..,....#####.,....#.....,##########,.########.,..######..,..........']],
   12: [],
 };
-let lang = (navigator.language || 'en').startsWith('fr') ? 'fr' : 'en';
+const LANGS = ['fr', 'en', 'es', 'pt', 'de', 'it', 'ja', 'ko', 'tr', 'pl'], NAV = (navigator.language || 'en').slice(0, 2).toLowerCase();
+let lang = LANGS.includes(NAV) ? NAV : 'en';
 const KEY = 'logimages.save.v1';
 let S = { lang: null, muted: false, lv: { 5: 0, 10: 0, 12: 0 }, daily: '', streak: 0, hints: 3, hintDay: '', plays: 0 };
 try { const o = JSON.parse(localStorage.getItem(KEY) || '{}'); Object.assign(S, o); S.lv = Object.assign({ 5: 0, 10: 0, 12: 0 }, o.lv || {}); } catch (e) {}
 const save = () => { try { S.cur = G && !G.over ? G : null; localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
-if (S.lang) lang = S.lang;
+if (S.lang && L[S.lang]) lang = S.lang;
 const T = () => L[lang], fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]), $ = id => document.getElementById(id);
 const dayKey = ms => { const d = new Date(ms); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 if (S.hintDay !== dayKey(Date.now())) { S.hintDay = dayKey(Date.now()); S.hints = Math.max(S.hints, 3); }
@@ -189,17 +215,17 @@ $('again').onclick = () => start(G.n, G.daily);
 $('home2').onclick = () => home();
 function home() {
   G = null; S.cur = null; save(); $('win').hidden = true; $('game').hidden = true; $('home').hidden = false; $('back').hidden = true; const t = T(); document.title = t.title; document.documentElement.lang = lang;
-  $('ttl').textContent = t.title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; $('snd').textContent = S.muted ? '🔇' : '🔊'; $('how').textContent = t.how;
+  $('ttl').textContent = t.title; $('lang').textContent = '🌐 ' + lang.toUpperCase(); $('langSel').value = lang; $('snd').textContent = S.muted ? '🔇' : '🔊'; $('how').textContent = t.how;
   const live = S.daily === dayKey(Date.now()) || S.daily === dayKey(Date.now() - 864e5);
   $('dT').textContent = t.daily; $('dS').textContent = (S.daily === dayKey(Date.now()) ? t.done : '') + fmt(t.streak, { n: live ? S.streak : 0 });
   $('packs').innerHTML = [5, 10, 12].map((n, i) => `<button class="pack" data-n="${n}"><span>${t.packs[i]}</span><small>${fmt(t.level, { n: S.lv[n] + 1 })}</small></button>`).join('');
 }
 $('packs').onclick = e => { const b = e.target.closest('[data-n]'); if (b) start(+b.dataset.n, false); };
 $('daily').onclick = () => start(10, true); $('back').onclick = home;
-$('lang').onclick = () => { lang = lang === 'fr' ? 'en' : 'fr'; S.lang = lang; save(); G ? paint() : home(); if (G) { $('ttl').textContent = T().title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; } };
+$('langSel').onchange = e => { lang = e.target.value; S.lang = lang; save(); G ? paint() : home(); if (G) { $('ttl').textContent = T().title; $('lang').textContent = '🌐 ' + lang.toUpperCase(); $('langSel').value = lang; } };
 $('snd').onclick = () => { S.muted = !S.muted; save(); $('snd').textContent = S.muted ? '🔇' : '🔊'; };
 addEventListener('resize', () => { if (G) { build(); paint(); } });
-if (S.cur && S.cur.sol) { G = S.cur; $('home').hidden = true; $('game').hidden = false; $('back').hidden = false; requestAnimationFrame(() => { build(); paint(); }); $('ttl').textContent = T().title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; $('snd').textContent = S.muted ? '🔇' : '🔊'; } else home();
+if (S.cur && S.cur.sol) { G = S.cur; $('home').hidden = true; $('game').hidden = false; $('back').hidden = false; requestAnimationFrame(() => { build(); paint(); }); $('ttl').textContent = T().title; $('lang').textContent = '🌐 ' + lang.toUpperCase(); $('langSel').value = lang; $('snd').textContent = S.muted ? '🔇' : '🔊'; } else home();
 window.LG = { get G() { return G; }, S, start, mark, ART, fromArt, clues, randomSol, solvable }; // debug hook for automated tests
 </script>
 </body>

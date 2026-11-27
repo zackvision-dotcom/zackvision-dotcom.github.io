@@ -34,6 +34,10 @@
   [hidden]{display:none!important}
   .langp{position:relative;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.langp select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer}
   .noads{margin:16px auto 4px;text-align:center;max-width:340px;width:100%}.noads .na-buy{border:0;border-radius:999px;min-height:44px;padding:10px 20px;font:inherit;font-weight:800;background:rgba(40,28,18,.85);color:#fff;cursor:pointer}.noads small{display:block;opacity:.75;margin:6px 0 0;font-size:13px}.noads .na-link{background:none;border:0;color:inherit;text-decoration:underline;font:inherit;font-size:14px;min-height:44px;padding:8px 14px;cursor:pointer}.noads .na-ok{margin:6px 0;font-weight:700}
+
+  /* small screens (320 px) and long languages: keep pills on one line, title shrinks before wrapping */
+  .pill,.langp{white-space:nowrap}h1#ttl,#ttl{font-size:clamp(15px,5.2vw,22px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  @media (max-width:360px){.pill{padding:7px 8px;font-size:12px}footer button{font-size:12px;padding:12px 4px;white-space:nowrap}}
 </style>
 </head>
 <body>

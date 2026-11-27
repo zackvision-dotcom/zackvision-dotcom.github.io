@@ -32,11 +32,12 @@
   .cta{background:var(--red);color:#fff;border-radius:14px;padding:13px 16px;font-weight:900;font-size:16px;width:100%;margin-top:8px}
   .alt{background:#e8e1cf;color:var(--ink)}
   [hidden]{display:none!important}
+  .langp{position:relative;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}.langp select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer}
 </style>
 </head>
 <body>
 <div id="app">
-  <header><h1 id="ttl"></h1><div class="stats"><div class="pill" id="moves"></div><div class="pill" id="timer">0:00</div><button class="pill" id="lang"></button><button class="pill" id="snd">🔊</button></div></header>
+  <header><h1 id="ttl"></h1><div class="stats"><div class="pill" id="moves"></div><div class="pill" id="timer">0:00</div><label class="pill langp"><span id="lang"></span><select id="langSel" aria-label="Language"><option value="fr">Français</option><option value="en">English</option><option value="es">Español</option><option value="pt">Português</option><option value="de">Deutsch</option><option value="it">Italiano</option><option value="ja">日本語</option><option value="ko">한국어</option><option value="tr">Türkçe</option><option value="pl">Polski</option></select></label><button class="pill" id="snd">🔊</button></div></header>
   <div id="board"></div>
   <footer><button id="newB"></button><button id="undoB"></button><button id="hintB"></button></footer>
 </div>
@@ -46,13 +47,22 @@
 const L = {
   fr: { title: 'Solitaire', moves: '{n} coups', newG: 'Nouvelle', undo: '↩ Annuler', hint: '💡 Indice', hintN: '💡 Indice ({n})', hintAd: '💡 Indice 🎬', win: 'Gagné !', winS: '{t} · {n} coups', menu: 'Nouvelle partie', stats: 'Victoires : {w} · Série du jour : {s}', daily: '📅 Donne du jour', dailyDone: '📅 Donne du jour ✔', rand: '🔀 Donne au hasard', close: 'Continuer', auto: 'Fin automatique…', stuck: 'Plus de coup possible' },
   en: { title: 'Solitaire', moves: '{n} moves', newG: 'New', undo: '↩ Undo', hint: '💡 Hint', hintN: '💡 Hint ({n})', hintAd: '💡 Hint 🎬', win: 'You win!', winS: '{t} · {n} moves', menu: 'New game', stats: 'Wins: {w} · Daily streak: {s}', daily: '📅 Daily deal', dailyDone: '📅 Daily deal ✔', rand: '🔀 Random deal', close: 'Keep playing', auto: 'Auto-finishing…', stuck: 'No more moves' },
+  es: { title: 'Solitario', moves: '{n} movimientos', newG: 'Nueva', undo: '↩ Deshacer', hint: '💡 Pista', hintN: '💡 Pista ({n})', hintAd: '💡 Pista 🎬', win: '¡Ganaste!', winS: '{t} · {n} movimientos', menu: 'Nueva partida', stats: 'Victorias: {w} · Racha diaria: {s}', daily: '📅 Reparto del día', dailyDone: '📅 Reparto del día ✔', rand: '🔀 Reparto al azar', close: 'Seguir jugando', auto: 'Terminando solo…', stuck: 'No quedan movimientos' },
+  pt: { title: 'Paciência', moves: '{n} jogadas', newG: 'Novo', undo: '↩ Desfazer', hint: '💡 Dica', hintN: '💡 Dica ({n})', hintAd: '💡 Dica 🎬', win: 'Você venceu!', winS: '{t} · {n} jogadas', menu: 'Novo jogo', stats: 'Vitórias: {w} · Sequência diária: {s}', daily: '📅 Jogo do dia', dailyDone: '📅 Jogo do dia ✔', rand: '🔀 Jogo aleatório', close: 'Continuar', auto: 'Finalizando…', stuck: 'Sem jogadas possíveis' },
+  de: { title: 'Solitär', moves: '{n} Züge', newG: 'Neu', undo: '↩ Zurück', hint: '💡 Tipp', hintN: '💡 Tipp ({n})', hintAd: '💡 Tipp 🎬', win: 'Gewonnen!', winS: '{t} · {n} Züge', menu: 'Neues Spiel', stats: 'Siege: {w} · Tagesserie: {s}', daily: '📅 Tagesspiel', dailyDone: '📅 Tagesspiel ✔', rand: '🔀 Zufallsspiel', close: 'Weiterspielen', auto: 'Wird beendet…', stuck: 'Keine Züge mehr' },
+  it: { title: 'Solitario', moves: '{n} mosse', newG: 'Nuova', undo: '↩ Annulla', hint: '💡 Aiuto', hintN: '💡 Aiuto ({n})', hintAd: '💡 Aiuto 🎬', win: 'Hai vinto!', winS: '{t} · {n} mosse', menu: 'Nuova partita', stats: 'Vittorie: {w} · Serie giornaliera: {s}', daily: '📅 Mano del giorno', dailyDone: '📅 Mano del giorno ✔', rand: '🔀 Mano casuale', close: 'Continua', auto: 'Completamento automatico…', stuck: 'Nessuna mossa possibile' },
+  ja: { title: 'ソリティア', moves: '{n}手', newG: '新規', undo: '↩ 戻す', hint: '💡 ヒント', hintN: '💡 ヒント ({n})', hintAd: '💡 ヒント 🎬', win: 'クリア！', winS: '{t} · {n}手', menu: '新しいゲーム', stats: '勝利数：{w} · 連続日数：{s}', daily: '📅 今日の配り', dailyDone: '📅 今日の配り ✔', rand: '🔀 ランダム配り', close: '続ける', auto: '自動で仕上げ中…', stuck: 'もう動かせる手がありません' },
+  ko: { title: '솔리테어', moves: '{n}수', newG: '새 게임', undo: '↩ 되돌리기', hint: '💡 힌트', hintN: '💡 힌트 ({n})', hintAd: '💡 힌트 🎬', win: '승리!', winS: '{t} · {n}수', menu: '새 게임', stats: '승리: {w} · 연속 일수: {s}', daily: '📅 오늘의 게임', dailyDone: '📅 오늘의 게임 ✔', rand: '🔀 무작위 게임', close: '계속하기', auto: '자동 마무리 중…', stuck: '더 이상 둘 수 있는 수가 없어요' },
+  tr: { title: 'Solitaire', moves: '{n} hamle', newG: 'Yeni', undo: '↩ Geri al', hint: '💡 İpucu', hintN: '💡 İpucu ({n})', hintAd: '💡 İpucu 🎬', win: 'Kazandın!', winS: '{t} · {n} hamle', menu: 'Yeni oyun', stats: 'Galibiyet: {w} · Günlük seri: {s}', daily: '📅 Günün dağıtımı', dailyDone: '📅 Günün dağıtımı ✔', rand: '🔀 Rastgele dağıtım', close: 'Devam et', auto: 'Otomatik bitiriliyor…', stuck: 'Başka hamle yok' },
+  pl: { title: 'Pasjans', moves: '{n} ruchów', newG: 'Nowa', undo: '↩ Cofnij', hint: '💡 Podpowiedź', hintN: '💡 Podpowiedź ({n})', hintAd: '💡 Podpowiedź 🎬', win: 'Wygrana!', winS: '{t} · {n} ruchów', menu: 'Nowa gra', stats: 'Wygrane: {w} · Seria dzienna: {s}', daily: '📅 Rozdanie dnia', dailyDone: '📅 Rozdanie dnia ✔', rand: '🔀 Losowe rozdanie', close: 'Graj dalej', auto: 'Kończenie automatyczne…', stuck: 'Brak możliwych ruchów' },
 };
-let lang = (navigator.language || 'en').startsWith('fr') ? 'fr' : 'en';
+const LANGS = ['fr', 'en', 'es', 'pt', 'de', 'it', 'ja', 'ko', 'tr', 'pl'], NAV = (navigator.language || 'en').slice(0, 2).toLowerCase();
+let lang = LANGS.includes(NAV) ? NAV : 'en';
 const KEY = 'solitaire.save.v1';
 let S = { lang: null, muted: false, wins: 0, plays: 0, daily: '', streak: 0, hints: 3, hintDay: '', game: null };
 try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
 const save = () => { S.game = G ? { G, t: elapsed(), undo: undo.slice(-40) } : null; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} };
-if (S.lang) lang = S.lang;
+if (S.lang && L[S.lang]) lang = S.lang;
 const T = () => L[lang], fmt = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k]), $ = id => document.getElementById(id);
 const dayKey = ms => { const d = new Date(ms); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
 if (S.hintDay !== dayKey(Date.now())) { S.hintDay = dayKey(Date.now()); S.hints = Math.max(S.hints, 3); }
@@ -62,7 +72,7 @@ if (ADS) try { ADS.postMessage({ op: 'init' }); } catch (e) {}
 let ac = null; function beep(f, d = 0.07, v = 0.1, at = 0) { if (S.muted) return; try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); const o = ac.createOscillator(), g = ac.createGain(), t0 = ac.currentTime + at; o.type = 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(v, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d); o.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + d + 0.02); } catch (e) {} }
 
 // ---------- game ----------
-const SUIT = ['♠', '♥', '♦', '♣'], RANK = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'V', 'D', 'R'], RANK_EN = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+const SUIT = ['♠', '♥', '♦', '♣'], RANK = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'V', 'D', 'R'], RANK_EN = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'], RANK_DE = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'B', 'D', 'K'];
 const red = c => c.s === 1 || c.s === 2;
 let G = null, undo = [], t0 = 0, tBase = 0, tick = 0, hintId = null, autoRun = 0;
 function rng(seed) { let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
@@ -115,7 +125,7 @@ const board = $('board'); let cw = 50, ch = 70, gap = 6;
 function layout() { const W = board.clientWidth, H = board.clientHeight; gap = Math.max(4, W * 0.012); cw = (W - gap * 6) / 7; ch = cw * 1.42; if (ch > H * 0.3) { ch = H * 0.3; cw = Math.min(cw, ch / 1.42); } }   // landscape: narrower cards rather than squashed ones
 const X = k => k * (cw + gap);
 function cardHTML(c, x, y, z, src, col, idx) {
-  const fs = cw * 0.36, R = lang === 'fr' ? RANK : RANK_EN;
+  const fs = cw * 0.36, R = lang === 'fr' ? RANK : lang === 'de' ? RANK_DE : RANK_EN;
   return `<div class="card ${c.up ? (red(c) ? 'red' : '') : 'down'} ${hintId === c.id ? 'hint' : ''}" data-src="${src}" data-col="${col}" data-idx="${idx}" style="left:${x}px;top:${y}px;width:${cw}px;height:${ch}px;z-index:${z};font-size:${fs}px">${c.up ? `<div class="c">${R[c.r]}<br>${SUIT[c.s]}</div><div class="m" style="font-size:${cw * 0.62}px">${SUIT[c.s]}</div>` : ''}</div>`;
 }
 function render() {
@@ -142,8 +152,8 @@ function menu(won, stuck) { const t = T(); $('mT').textContent = won ? t.win : s
 $('newB').onclick = () => menu(false); $('closeB').onclick = () => { $('menu').hidden = true; };
 const begin = async daily => { $('menu').hidden = true; if (S.plays > 0 && S.plays % 2 === 0) await ad('interstitial'); deal(daily ? hash('daily' + dayKey(Date.now())) : (Math.random() * 4294967296) >>> 0, daily); };
 $('dailyB').onclick = () => begin(true); $('randB').onclick = () => begin(false);
-function texts() { const t = T(); document.title = t.title; document.documentElement.lang = lang; $('ttl').textContent = t.title; $('lang').textContent = lang === 'fr' ? 'EN' : 'FR'; $('snd').textContent = S.muted ? '🔇' : '🔊'; $('newB').textContent = t.newG; $('undoB').textContent = t.undo; if (G) render(); }
-$('lang').onclick = () => { lang = lang === 'fr' ? 'en' : 'fr'; S.lang = lang; save(); texts(); };
+function texts() { const t = T(); document.title = t.title; document.documentElement.lang = lang; $('ttl').textContent = t.title; $('lang').textContent = '🌐 ' + lang.toUpperCase(); $('langSel').value = lang; $('snd').textContent = S.muted ? '🔇' : '🔊'; $('newB').textContent = t.newG; $('undoB').textContent = t.undo; if (G) render(); }
+$('langSel').onchange = e => { lang = e.target.value; S.lang = lang; save(); texts(); };
 $('snd').onclick = () => { S.muted = !S.muted; save(); texts(); };
 addEventListener('resize', () => G && render()); addEventListener('pagehide', () => G && !G.won && save());
 texts();
